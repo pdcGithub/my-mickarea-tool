@@ -1,0 +1,95 @@
+@charset "UTF-8";
+
+/* 定义一些通用的css变量 */
+:root{
+    --title-bar-height: 46px; /*标题栏高度*/
+    --content-padding-top: 51px;
+    --panel-left-width: 200px; /*侧边栏宽度*/
+    --panel-left-navbar-bgcolor: #e3f2fd; /*左侧导航栏的背景颜色*/
+}
+
+/*高度铺满处理*/
+html, body {
+    height: 100%;
+}
+
+/*页面面板处理*/
+.panel-left, .panel-right{
+    height: 100%;
+}
+.panel-left{
+    width: var(--panel-left-width);
+    background-color: var(--panel-left-navbar-bgcolor);
+}
+.panel-right{
+    width: 100%;
+    padding-left: var(--panel-left-width);
+}
+
+/*标题区样式*/
+.title-area{
+    width: 100%;
+    height: var(--title-bar-height);
+    background-color: #f2f2f2;
+}
+/*内容区样式*/
+.content-area{
+    width: 100%;
+    height: 100%;
+    padding-top: var(--content-padding-top);
+}
+
+/* 窗口控制区的样式 */
+.drag-area{
+    -webkit-app-region: drag;
+    -webkit-user-select: none;
+    user-select:none;
+}
+.drag-area-exclude{
+    -webkit-app-region: no-drag;
+    -webkit-user-select: auto;
+    user-select:auto;
+}
+.no-radius{
+    border-radius:0;
+}
+
+/* 窗口操作按钮样式*/
+.win-title{
+    width: 100%;
+    height: 100%;
+    line-height: var(--title-bar-height);
+}
+.win-min, .win-max, .win-close{
+    width: var(--title-bar-height);
+    height: var(--title-bar-height);
+    background-image: url(../images/windowBtns/min.png);
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.win-min:hover, .win-max:hover, .win-close:hover{
+    background-color: #CCC;
+    cursor: pointer;
+}
+.win-max{
+    background-image: url(../images/windowBtns/max.png);
+}
+.win-close{
+    background-image: url(../images/windowBtns/close.png);
+}
+
+/* 左侧导航栏，选中处理 */
+.navbar-nav .active>.nav-link::after{
+    content: '';
+    background-size: 20px 20px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../images/otherImgs/nav-checked.png);
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+    margin-top: 2px;
+    vertical-align: top;
+}
