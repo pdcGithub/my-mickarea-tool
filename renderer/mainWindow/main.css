@@ -3,7 +3,6 @@
 /* 定义一些通用的css变量 */
 :root{
     --title-bar-height: 46px; /*标题栏高度*/
-    --content-padding-top: 51px;
     --panel-left-width: 200px; /*侧边栏宽度*/
     --panel-left-navbar-bgcolor: #e3f2fd; /*左侧导航栏的背景颜色*/
 }
@@ -36,7 +35,7 @@ html, body {
 .content-area{
     width: 100%;
     height: 100%;
-    padding-top: var(--content-padding-top);
+    padding-top: calc(var(--title-bar-height) + 5px);
 }
 
 /* 窗口控制区的样式 */
