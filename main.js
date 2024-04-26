@@ -9,6 +9,8 @@ let createMainWindow = () => {
     mainWindow = new BrowserWindow({
         width:1000,
         height:600,
+        minWidth:600, //添加最小高度和最小宽度
+        minHeight:300,
         webPreferences:{
             //加载主窗口专属 preload 脚本
             preload: path.join(__dirname, 'preload/main/main-preload.js')

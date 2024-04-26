@@ -3,7 +3,6 @@
 /* 定义一些通用的css变量 */
 :root{
     --title-bar-height: 46px; /*标题栏高度*/
-    --content-padding-top: 51px;
     --panel-left-width: 200px; /*侧边栏宽度*/
     --panel-left-navbar-bgcolor: #e3f2fd; /*左侧导航栏的背景颜色*/
 }
@@ -36,7 +35,7 @@ html, body {
 .content-area{
     width: 100%;
     height: 100%;
-    padding-top: var(--content-padding-top);
+    padding-top: calc(var(--title-bar-height) + 5px);
 }
 
 /* 窗口控制区的样式 */
@@ -54,13 +53,23 @@ html, body {
     border-radius:0;
 }
 
+/* 标题栏的 logo 图标 */
+.my-logo{
+    width: var(--title-bar-height);
+    height: var(--title-bar-height);
+    background-image: url(../images/logo/logo.png);
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+    background-position: left;
+}
+
 /* 窗口操作按钮样式*/
 .win-title{
-    width: 100%;
-    height: 100%;
+    width: calc(100% - var(--title-bar-height) -30px);
+    height: var(--title-bar-height);
     line-height: var(--title-bar-height);
 }
-.win-min, .win-max, .win-close{
+.win-min, .win-max, .win-close, .win-left-toggle{
     width: var(--title-bar-height);
     height: var(--title-bar-height);
     background-image: url(../images/windowBtns/min.png);
@@ -68,7 +77,7 @@ html, body {
     background-repeat: no-repeat;
     background-position: center;
 }
-.win-min:hover, .win-max:hover, .win-close:hover{
+.win-min:hover, .win-max:hover, .win-close:hover, .win-left-toggle:hover{
     background-color: #CCC;
     cursor: pointer;
 }
@@ -77,6 +86,9 @@ html, body {
 }
 .win-close{
     background-image: url(../images/windowBtns/close.png);
+}
+.win-left-toggle{
+    background-image: url(../images/windowBtns/toggle.png);
 }
 
 /* 左侧导航栏，选中处理 */
@@ -92,4 +104,22 @@ html, body {
     margin-left: 5px;
     margin-top: 2px;
     vertical-align: top;
+}
+
+/*定义动画*/
+@keyframes panel-left-open { /*左侧导航栏打开*/
+    from{width: 0px;}
+    to{width: var(--panel-left-width);}
+}
+@keyframes panel-left-close { /*左侧导航栏关闭*/
+    from{width: var(--panel-left-width);}
+    to{width: 0px;}
+}
+@keyframes panel-right-curtail { /*右侧区域缩小*/
+    from{padding-left: 0px;}
+    to{padding-left: var(--panel-left-width);}
+}
+@keyframes panel-right-extend {  /*右侧区域扩大*/
+    from{padding-left: var(--panel-left-width);}
+    to{padding-left: 0px;}
 }
