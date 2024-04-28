@@ -12,6 +12,9 @@ $(document).ready(()=>{
     
     //绑定左侧导航菜单栏的点击处理
     $('.nav-item').on('click', leftNavOnClick);
+
+    //默认一开始，点击一下第一个菜单
+    $("#entitygen").click();
 });
 
 /* 添加关于动画事件的监听 */
@@ -87,6 +90,21 @@ function leftNavOnClick(){
     $(".nav-item").removeClass('active');
     //再在点击的地方添加 active 样式
     $(this).addClass('active');
-    //清空内容区，将菜单对应的内容放入
-    $('#fillInArea').html($(this).text());
+    //获取当前处理的id信息
+    let id = $(this).attr('id');
+    //根据不同id，切换不同页面
+    let url = './iframes/none.html';
+    switch(id){
+        case 'entitygen':
+            break;
+        case 'funcgen':
+            break;
+        case 'others':
+            break;
+        case 'aboutus':
+            url = './iframes/'+id+'.html';
+            break;
+    }
+    //跳转 对应功能
+    $('#fillInArea').attr('src', url);
 }
