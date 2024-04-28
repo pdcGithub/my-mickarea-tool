@@ -30,6 +30,8 @@ function doIPC(){
     let ipc = new MyIpc();
     //关于窗口操作的 进程间通讯
     ipcMain.handle('winbtn:behavior', (event, behavior)=>{return ipc.windowBtnBehavior(event, behavior, mainWindow);})
+    //关于一些基础信息的 进程间通讯
+    ipcMain.handle('base:appversion', (event)=>{return app.getVersion()})
 }
 
 //设置一个主函数
