@@ -1,0 +1,15 @@
+@charset "UTF-8";
+
+/*高度铺满处理*/
+html, body {
+    height: 100%;
+}
+/*上下空间设置*/
+.my-content{
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+/*去除alert信息框的 margin-bottom */
+.alert{
+    margin-bottom: 0;
+}
