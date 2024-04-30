@@ -13,3 +13,15 @@ html, body {
 .alert{
     margin-bottom: 0;
 }
+
+/*处理页面的表单样式*/
+.my-check-radio-group .invalid-feedback{
+    display: none;
+    width: 100%;
+    margin-top: .25rem;
+    font-size: .875em;
+    color: #dc3545;
+}
+.is-invalid>.invalid-feedback{
+    display: block;
+}

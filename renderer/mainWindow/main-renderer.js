@@ -96,6 +96,7 @@ function leftNavOnClick(){
     let url = './iframes/none.html';
     switch(id){
         case 'entitygen':
+            url = './iframes/'+id+'.html';
             break;
         case 'funcgen':
             break;
