@@ -10,7 +10,7 @@ html, body {
     padding-bottom: 15px;
 }
 /*去除alert信息框的 margin-bottom */
-.alert{
+.my-alert{
     margin-bottom: 0;
 }
 
