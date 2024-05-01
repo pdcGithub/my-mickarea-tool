@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../../thirdparty/bootstrap4/bootstrap.min.css" />
     <!-- 本页面自己的 css 样式 -->
     <link rel="stylesheet" href="./myframes.css" />
+    <link rel="stylesheet" href="./entitygen.css" />
     <!-- 网页标题 -->
     <title></title>
 </head>
@@ -18,105 +19,18 @@
     <div class="container-fluid my-content">
         <nav>
             <div id="nav-tab" class="nav nav-tabs">
-                <button id="nav-dbconfig-tab" type="button" class="nav-link active" data-toggle="tab" data-target="#nav-dbconfig">数据库配置</button>
-                <button id="nav-enviroment-tab" type="button" class="nav-link" data-toggle="tab" data-target="#nav-enviroment">环境配置</button>
+                <button id="nav-baseconfig-tab" type="button" class="nav-link active" data-toggle="tab" data-target="#nav-baseconfig">基础配置</button>
                 <button id="nav-dbobject-tab" type="button" class="nav-link" data-toggle="tab" data-target="#nav-dbobject">表、视图、Sql语句</button>
                 <button id="nav-result-tab" type="button" class="nav-link" data-toggle="tab" data-target="#nav-result">生成结果</button>
             </div>
         </nav>
         <div id="nav-tab-content" class="tab-content">
-            <div id="nav-dbconfig" class="tab-pane fade show active pt-2">
+            <div id="nav-baseconfig" class="tab-pane fade show active pt-2">
                 <!-- 数据库配置信息，布局处理 -->
-                <div class="alert alert-primary" >
-                    这个分页用于配置、保存、以及测试数据库连接信息。
-                </div>
+                <div class="alert alert-primary" >这个分页用于配置基础信息（比如：数据库连接、Java环境等等）。</div>
                 <form>
-                    <div class="form-row">
-                        <div class="form-group col-md-12">
-                            <label for="databaseType">数据库类型</label>
-                            <div class="pt-2 my-check-radio-group">
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input class="custom-control-input" type="radio" name="databaseType" id="databaseTypeRadio1" value="MySql" />
-                                    <label class="custom-control-label" for="databaseTypeRadio1">MySql 8+</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input class="custom-control-input" type="radio" name="databaseType" id="databaseTypeRadio2" value="Oracle" />
-                                    <label class="custom-control-label" for="databaseTypeRadio2">Oracle 10+</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input class="custom-control-input" type="radio" name="databaseType" id="databaseTypeRadio3" value="SqlServer" />
-                                    <label class="custom-control-label" for="databaseTypeRadio3">MS SqlServer 2008+</label>
-                                </div>
-                                <!-- 异常信息 -->
-                                <div class="invalid-feedback"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-md-4">
-                            <label for="inputPoolName">连接池名称</label>
-                            <input type="text" class="form-control" id="inputPoolName" autocomplete="off" placeholder="name"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputDriverClassName">JDBC 驱动的 Java 类名</label>
-                            <input type="text" class="form-control" id="inputDriverClassName" autocomplete="off" placeholder="driver class name"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputJdbcUrl">JDBC 链接字符串</label>
-                            <input type="text" class="form-control" id="inputJdbcUrl" autocomplete="off" placeholder="jdbc:mysql://192.168.0.1:3306/dbname"/>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-md-4">
-                            <label for="inputUserName">数据库用户名</label>
-                            <input type="text" class="form-control" id="inputUserName" autocomplete="off" placeholder="username"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputPassWord">数据库用户密码</label>
-                            <input type="password" class="form-control" id="inputPassWord" autocomplete="off" placeholder="password"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputAutoCommit">数据库操作是否自动提交</label>
-                            <div class="pt-2">
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input class="custom-control-input" type="radio" name="autoCommit" id="inputAutoCommit1" value="true" />
-                                    <label class="custom-control-label" for="inputAutoCommit1">是</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input class="custom-control-input" type="radio" name="autoCommit" id="inputAutoCommit2" value="false" checked />
-                                    <label class="custom-control-label" for="inputAutoCommit2">否</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-md-4">
-                            <label for="inputConnectionTimeout">数据库链接超时阈值（毫秒）</label>
-                            <input type="text" class="form-control" id="inputConnectionTimeout" autocomplete="off" placeholder="30000"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputMinimumIdle">连接池最小线程数</label>
-                            <input type="text" class="form-control" id="inputMinimumIdle" autocomplete="off" placeholder="10"/>
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label for="inputMaximumPoolSize">连接池最大线程数</label>
-                            <input type="text" class="form-control" id="inputMaximumPoolSize" autocomplete="off" placeholder="50"/>
-                        </div>
-                    </div>
-                    <!-- 按钮设置 -->
-                    <button type="button" class="btn btn-primary">保存配置</button>
-                    <button type="button" class="btn btn-success">测试配置</button>
-                    <button type="button" class="btn btn-warning">清空配置</button>
-                    <button type="button" class="btn btn-info">清空缓存</button>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">调取已有配置</button>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#">无</a>
-                        </div>
-                    </div>
                 </form>
             </div>
-            <div id="nav-enviroment" class="tab-pane fade">yyy</div>
             <div id="nav-dbobject" class="tab-pane fade">zzz</div>
             <div id="nav-result" class="tab-pane fade">ooo</div>
         </div>
