@@ -7,10 +7,10 @@ let mainWindow;
 let createMainWindow = () => {
     //主窗口
     mainWindow = new BrowserWindow({
-        width:1000,
-        height:600,
-        minWidth:600, //添加最小高度和最小宽度
-        minHeight:300,
+        width:1100,
+        height:700,
+        minWidth:1100, //添加最小高度和最小宽度
+        minHeight:700,
         webPreferences:{
             //加载主窗口专属 preload 脚本
             preload: path.join(__dirname, 'preload/main/main-preload.js')
@@ -21,7 +21,7 @@ let createMainWindow = () => {
     //主窗口加载页面
     mainWindow.loadFile('renderer/mainWindow/main.html')
     //开发者工具
-    mainWindow.webContents.openDevTools()
+    //mainWindow.webContents.openDevTools()
 }
 
 //关于进行间通讯的处理

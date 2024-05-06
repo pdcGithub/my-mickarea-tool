@@ -14,7 +14,7 @@ const formObjMap1 = {
     ]},
     jvm:{id:'jvm', title:'Java 环境路径', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
     jar:{id:'jar', title:'Java 后端的Jar包路径', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
-    poolName:{id:'poolName', title:'连接池名称', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
+    poolName:{id:'poolName', autofocus:true, title:'连接池名称', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
     jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
     jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
     dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 数据库用户名', type:'text', typeInfo:[]},
@@ -168,7 +168,8 @@ function genForm(tabId, configObj){
                     //默认作为 text 处理
                     tmpCol.addClass('form-group '+col.colWidth);
                     tmpCol.append('<label>'+col.title+'</label>');
-                    tmpCol.append('<input type="'+(col.type=='password'?col.type:'text')+'" class="form-control" id="'+col.id+'" autocomplete="off" placeholder="'+(!col.placeholder?'':col.placeholder)+'"/>');
+                    let autofocus = col.autofocus ? 'autofocus' : '';
+                    tmpCol.append('<input '+autofocus+' type="'+(col.type=='password'?col.type:'text')+'" class="form-control" id="'+col.id+'" autocomplete="off" placeholder="'+(!col.placeholder?'':col.placeholder)+'"/>');
                     //添加异常信息显示区
                     tmpCol.append('<div class="invalid-feedback">'+col.invalidInfo+'</div>');
                     break;
@@ -198,7 +199,7 @@ function actionBinding(){
     }
 
     //特殊的表单内容事件处理
-    
+
 
 }
 
@@ -235,7 +236,7 @@ function testJavaAction(){
 
 //清空配置事件
 function clearConfigAction(){
-
+    window.location.reload();
 }
 
 //清空缓存信息事件
