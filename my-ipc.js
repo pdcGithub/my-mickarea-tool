@@ -43,6 +43,17 @@ function MyIpc() {
         return dialog.showMessageBox(window, option);
     };
 
+    //文件选择弹窗
+    this.fileselect = function(event, myFileFilter, window){
+        let fileFilters = [
+            {name:'所有文件', extensions: ['*']}
+        ];
+        if(myFileFilter){
+            fileFilters = myFileFilter;
+        }
+        return dialog.showOpenDialog(window, {title:'请选择一个文件', filters:fileFilters});
+    }
+
 };
 
 //导出模块
