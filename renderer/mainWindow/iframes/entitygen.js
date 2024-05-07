@@ -12,20 +12,20 @@ const formObjMap1 = {
         {label:'Oracle 10+', value:'Oracle', checked:false},
         {label:'MS SqlServer 2008+', value:'SqlServer', checked:false}
     ]},
-    jvm:{id:'jvm', title:'Java 环境路径', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
-    jar:{id:'jar', title:'Java 后端的Jar包路径', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
-    poolName:{id:'poolName', autofocus:true, title:'连接池名称', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
-    jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
-    jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
-    dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请填写 数据库用户名', type:'text', typeInfo:[]},
-    dbPasswd:{id:'dbPasswd', title:'数据库用户密码', colWidth:'col-md-4', needValid:true, validReg:/.+/, invalidInfo:'请选择 数据库用户密码', type:'password', typeInfo:[]},
+    jvm:{id:'jvm', title:'Java 环境路径（点击）', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
+    jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
+    poolName:{id:'poolName', autofocus:true, title:'配置名称', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
+    jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
+    jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
+    dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 数据库用户名', type:'text', typeInfo:[]},
+    dbPasswd:{id:'dbPasswd', title:'数据库用户密码', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 数据库用户密码', type:'password', typeInfo:[]},
     isAutoCommit:{id:'isAutoCommit', title:'数据库操作是否自动提交', colWidth:'col-md-4', needValid:true, validReg:undefined, invalidInfo:'请选择提交方式', type:'radio', typeInfo:[
         {label:'是', value:'true', checked:false},
         {label:'否', value:'false', checked:false}
     ]},
-    connTimeout:{id:'connTimeout', title:'数据库链接超时阈值（毫秒）', colWidth:'col-md-4', needValid:true, validReg:/[1-9](\d+)?/, invalidInfo:'请填写 阈值', type:'text', typeInfo:[]},
-    minThreadNum:{id:'minThreadNum', title:'连接池最小线程数', colWidth:'col-md-4', needValid:true, validReg:/[1-9](\d+)?/, invalidInfo:'请填写线程数，不超过10', type:'text', typeInfo:[]},
-    maxThreadNum:{id:'maxThreadNum', title:'连接池最大线程数', colWidth:'col-md-4', needValid:true, validReg:/[1-9](\d+)?/, invalidInfo:'请填写线程数，不超过50', type:'text', typeInfo:[]},
+    connTimeout:{id:'connTimeout', title:'数据库链接超时阈值（毫秒）', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写 阈值', type:'text', typeInfo:[]},
+    minThreadNum:{id:'minThreadNum', title:'连接池最小线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过10', type:'text', typeInfo:[]},
+    maxThreadNum:{id:'maxThreadNum', title:'连接池最大线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过50', type:'text', typeInfo:[]},
     //操作按钮
     saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary mr-1', type:'button'},
     testDB:{id:'testDB', title:'数据库测试', cssClass:'btn btn-success mr-1', type:'button'},
@@ -184,6 +184,7 @@ function genForm(tabId, configObj){
 
 //事件绑定处理
 function actionBinding(){
+
     //按钮绑定
     $('#saveConfig').on('click', saveConfigAction);
     $('#testDB').on('click', testDBAction);
@@ -191,15 +192,49 @@ function actionBinding(){
     $('#clearConfig').on('click', clearConfigAction);
     $('#clearCache').on('click', clearCacheAction);
     
-    //通用的表单内容的事件处理（输入框）
+    //通用的表单内容的事件处理（输入框 和 勾选框）
     for(row of mybaseconfig){
         for(formObj of row){
-            
+            if(['radio', 'checkbox'].includes(formObj.type)){
+                //勾选框
+                $('input[name="'+formObj.id+'"]').on('click', (jqueryEvent)=>{
+                    validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('name'));
+                });
+            }else if(!['button','buttonGroup'].includes(formObj.type)){
+                //文本输入框（jvm和jar点击事件触发文件选择，所以要分开处理）
+                if(['jvm','jar'].includes(formObj.id)){
+                    $('#'+formObj.id).on('change', (jqueryEvent)=>{
+                        validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('id'));
+                    });
+                }else{
+                    $('#'+formObj.id).on('click keyup', (jqueryEvent)=>{
+                        validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('id'));
+                    });
+                }
+            }
         }
     }
 
-    //特殊的表单内容事件处理
-
+    //特殊的表单内容事件处理（比如，文件选择）
+    $('#jvm').on('click', async (jqueryEvent)=>{
+        let result = await ElectronAPI.showFileDialog();
+        if(result.canceled){
+            $(jqueryEvent.currentTarget).val('').change();
+        }else{
+            $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+        }
+    });
+    $('#jar').on('click', async (jqueryEvent)=>{
+        let fileFilters = [
+            { name:'jar 文件', extensions:['jar']}
+        ];
+        let result = await ElectronAPI.showFileDialog(fileFilters);
+        if(result.canceled){
+            $(jqueryEvent.currentTarget).val('').change();
+        }else{
+            $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+        }
+    });
 
 }
 
@@ -225,13 +260,13 @@ async function saveConfigAction(){
 }
 
 //数据库测试事件
-function testDBAction(){
-
+async function testDBAction(){
+    await ElectronAPI.showAlert('本功能暂未实现');
 }
 
 //Java调用测试事件
-function testJavaAction(){
-
+async function testJavaAction(){
+    await ElectronAPI.showAlert('本功能暂未实现');
 }
 
 //清空配置事件
@@ -240,8 +275,8 @@ function clearConfigAction(){
 }
 
 //清空缓存信息事件
-function clearCacheAction(){
-
+async function clearCacheAction(){
+    await ElectronAPI.showAlert('本功能暂未实现');
 }
 
 //调取已有配置事件
