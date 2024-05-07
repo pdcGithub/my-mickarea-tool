@@ -18,10 +18,16 @@ let createMainWindow = () => {
         title: app.name,
         frame:false /* 去掉窗口的默认边框 */
     })
+
     //主窗口加载页面
     mainWindow.loadFile('renderer/mainWindow/main.html')
+
+    //窗口最大化（方便调试）
+    mainWindow.maximize();
+    
     //开发者工具
     mainWindow.webContents.openDevTools()
+    
 }
 
 //关于进行间通讯的处理
@@ -35,6 +41,8 @@ function doIPC(){
     //关于消息弹窗的处理 进程间通讯
     ipcMain.handle('base:alert', (event, message)=>{return ipc.alert(event, message, mainWindow)})
     ipcMain.handle('base:confirm', (event, message)=>{return ipc.confirm(event, message, mainWindow)})
+    //关于文件选择的弹窗处理 进程间通讯
+    ipcMain.handle('file:fileselect', (event, fileFilters)=>{return ipc.fileselect(event, fileFilters, mainWindow)})
 }
 
 //设置一个主函数
@@ -69,7 +77,7 @@ async function main(){
             if(process.platform !== 'darwin') app.quit()
         })
         app.on('activate', ()=>{
-            if(BrowserWindow.getAllWindows().length()===0) createWindow()
+            if(BrowserWindow.getAllWindows().length()===0) createMainWindow()
         })
     })
 }
