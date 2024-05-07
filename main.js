@@ -1,6 +1,6 @@
 const {app, BrowserWindow, Menu, ipcMain} = require('electron')
 const path = require('node:path')
-const MyIpc = require('./my-ipc')
+const MyIpc = require('./my-ipc');
 
 //应用主窗口创建函数
 let mainWindow;
@@ -21,7 +21,7 @@ let createMainWindow = () => {
     //主窗口加载页面
     mainWindow.loadFile('renderer/mainWindow/main.html')
     //开发者工具
-    //mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 }
 
 //关于进行间通讯的处理
@@ -32,6 +32,9 @@ function doIPC(){
     ipcMain.handle('winbtn:behavior', (event, behavior)=>{return ipc.windowBtnBehavior(event, behavior, mainWindow);})
     //关于一些基础信息的 进程间通讯
     ipcMain.handle('base:appversion', (event)=>{return app.getVersion()})
+    //关于消息弹窗的处理 进程间通讯
+    ipcMain.handle('base:alert', (event, message)=>{return ipc.alert(event, message, mainWindow)})
+    ipcMain.handle('base:confirm', (event, message)=>{return ipc.confirm(event, message, mainWindow)})
 }
 
 //设置一个主函数

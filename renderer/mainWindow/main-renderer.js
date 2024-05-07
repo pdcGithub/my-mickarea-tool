@@ -44,12 +44,13 @@ async function toolbarBtnClick(){
             let ipc = true;
             //如果是关闭，需要确认处理
             if(behavior=='close'){
-                ipc = confirm('确定要关闭窗口吗？关闭后将退出整个程序...');
+                let messageBoxResult = await window.ElectronAPI.showConfirm('确定要关闭窗口吗？关闭后将退出整个程序...');
+                if(messageBoxResult.response==1 || messageBoxResult.response==-1) ipc=false;
             }
             //确定发起 ipc 通讯，才执行
             if(ipc) result = await window.ElectronAPI.setWindowBehavior(behavior);
             //如果 执行结果异常，则弹出信息窗口
-            if(!result.status && result.info) alert(result.info);
+            if(!result.status && result.info) await window.ElectronAPI.showAlert(result.info);
         }
     }
 }

@@ -1,3 +1,6 @@
+//添加 electron 依赖
+const { dialog } = require('electron')
+
 //主进程 ipc 相关处理
 function MyIpc() {
 
@@ -26,6 +29,18 @@ function MyIpc() {
             result.info = e;
         }
         return result;
+    };
+
+    //消息弹窗的处理方法 alert
+    this.alert = function(event, message, window){
+        let option = {type:'warning', message:message, title:'温馨提示'};
+        return dialog.showMessageBox(window, option);
+    };
+
+    //消息弹窗的处理方法 confirm （如果点击窗口的关闭图标，返回 -1 ）
+    this.confirm = function(event, message, window){
+        let option = {type:'warning', message:message, title:'温馨提示', buttons:['确定', '取消'], cancelId:-1};
+        return dialog.showMessageBox(window, option);
     };
 
 };

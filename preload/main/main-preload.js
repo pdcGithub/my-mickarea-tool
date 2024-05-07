@@ -13,5 +13,9 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     
     // 这里暴漏一个 处理窗口最小化、最大化、以及关闭的方法
     // behavior 是操作类型的字符串
-    setWindowBehavior:(behavior)=> ipcRenderer.invoke('winbtn:behavior', behavior)
+    setWindowBehavior:(behavior)=> ipcRenderer.invoke('winbtn:behavior', behavior),
+
+    // 这里暴露2个 消息弹窗的处理方法
+    showAlert:(message)=>ipcRenderer.invoke('base:alert', message),
+    showConfirm:(message)=>ipcRenderer.invoke('base:confirm', message)
 });
