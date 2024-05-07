@@ -214,13 +214,13 @@ $(document).ready(()=>{
 });
 
 //按钮事件
-function saveConfigAction(){
+async function saveConfigAction(){
     //先检查合法性
     let isOk = validForm('nav-baseconfig');
     if(isOk){
         //保存到缓存中
     }else{
-        alert('表单尚未填写完整，请检查。');
+        await ElectronAPI.showAlert('表单尚未填写完整，请检查。');
     }
 }
 
