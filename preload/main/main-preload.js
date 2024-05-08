@@ -19,6 +19,10 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     showAlert:(message)=>ipcRenderer.invoke('base:alert', message),
     showConfirm:(message)=>ipcRenderer.invoke('base:confirm', message),
 
-    // 这里暴漏一个 文件选择框的处理方法
-    showFileDialog:(fileFilters)=>ipcRenderer.invoke('file:fileselect', fileFilters)
+    // 这里暴露一个 文件选择框的处理方法
+    showFileDialog:(fileFilters)=>ipcRenderer.invoke('file:fileselect', fileFilters),
+
+    //这里暴露一个 java 程序的调用方法
+    execJar:(javaCommand, jarPath, jarArguments)=>ipcRenderer.invoke('shell:jar', javaCommand, jarPath, jarArguments)
+
 });

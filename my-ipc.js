@@ -1,5 +1,6 @@
 //添加 electron 依赖
 const { dialog } = require('electron')
+const { execSync } = require('node:child_process')
 
 //主进程 ipc 相关处理
 function MyIpc() {
@@ -52,6 +53,23 @@ function MyIpc() {
             fileFilters = myFileFilter;
         }
         return dialog.showOpenDialog(window, {title:'请选择一个文件', filters:fileFilters});
+    };
+
+    //jar 执行处理
+    this.execJar = function(event, javaCommand, jarPath, jarArguments){
+        let myCommand = '"'+javaCommand+'" -jar "'+jarPath+'" ';
+        if(jarArguments && jarArguments.length>0){
+            for(arg of jarArguments){
+                myCommand += ' "'+arg+'" ';
+            }
+        }
+        //打印命令
+        //console.log(myCommand);
+        //执行命令
+        let buffer = execSync(myCommand, {timeout:5000})
+        //console.log(buffer.toString());
+        //返回结果
+        return buffer.toString();
     }
 
 };

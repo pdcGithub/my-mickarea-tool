@@ -12,8 +12,8 @@ const formObjMap1 = {
         {label:'Oracle 10+', value:'Oracle', checked:false},
         {label:'MS SqlServer 2008+', value:'SqlServer', checked:false}
     ]},
-    jvm:{id:'jvm', title:'Java 环境路径（点击）', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
-    jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
+    jvm:{id:'jvm', title:'Java 环境路径（点击）', placeholder:'java 或者 java.exe 所在路径', colWidth:'col-md-4', needValid:true, validReg:/^.*[\\\/]java(\.exe)?$/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
+    jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', placeholder:'可执行的 jar 文件' ,colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
     poolName:{id:'poolName', autofocus:true, title:'配置名称', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
     jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
     jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
@@ -266,7 +266,25 @@ async function testDBAction(){
 
 //Java调用测试事件
 async function testJavaAction(){
-    await ElectronAPI.showAlert('本功能暂未实现');
+    //先校验填写框是否填写完毕
+    let jvmOk = validFormObject('nav-baseconfig','jvm');
+    let jarOk = validFormObject('nav-baseconfig','jar');
+    if( jvmOk && jarOk){
+        //获取 jvm 路径 和 jar 路径
+        let jvmPath = $("#jvm").val();
+        let jarPath = $('#jar').val();
+        //调用 java 命令，测试 jar 包能否正确调用并返回
+        let resultMsg = '';
+        try{
+            resultMsg = await ElectronAPI.execJar(jvmPath, jarPath);
+        }catch(ex){
+            resultMsg = '调用后台的处理程序出错，请检查jar包是否可执行，以及参数调用是否正常.';
+        }
+        //显示返回的信息
+        await ElectronAPI.showAlert(resultMsg);
+    }else{
+        await ElectronAPI.showAlert('请先填写 Java 环境路径 和 Jar 包路径');
+    }
 }
 
 //清空配置事件

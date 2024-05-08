@@ -43,6 +43,8 @@ function doIPC(){
     ipcMain.handle('base:confirm', (event, message)=>{return ipc.confirm(event, message, mainWindow)})
     //关于文件选择的弹窗处理 进程间通讯
     ipcMain.handle('file:fileselect', (event, fileFilters)=>{return ipc.fileselect(event, fileFilters, mainWindow)})
+    //关于shell命令执行的处理 进程间通讯
+    ipcMain.handle('shell:jar', (event, javaCommand, jarPath, jarArguments)=>{return ipc.execJar(event, javaCommand, jarPath, jarArguments)})
 }
 
 //设置一个主函数
