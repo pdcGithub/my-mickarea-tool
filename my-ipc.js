@@ -1,6 +1,8 @@
 //添加 electron 依赖
 const { dialog } = require('electron')
 const { execSync } = require('node:child_process')
+const os = require('node:os')
+const path = require('node:path')
 
 //主进程 ipc 相关处理
 function MyIpc() {
@@ -70,6 +72,29 @@ function MyIpc() {
         //console.log(buffer.toString());
         //返回结果
         return buffer.toString();
+    };
+
+    //保存配置
+    this.saveConfig = function(event, dbConfig){
+        let result = {status:'ok', info:'', configFileName:''}
+        result.configFileName = dbConfig['poolName']+'.properties';
+        return result;
+    };
+
+    //读取配置
+    this.readConfig = function(event, configName){
+        let result = {status:'ok', info:'', data:undefined}
+        return result;
+    };
+
+    //获取当前所储存的所有配置文件名
+    this.getAllConfigId = function(){
+        let result = {status:'ok', info:'', data:['file1.properties','file2.properties','file3.properties']}
+        let homedir = os.homedir();
+        let separator = path.sep;
+        console.log('homedir='+homedir);
+        console.log('separator='+separator);
+        return result;
     }
 
 };

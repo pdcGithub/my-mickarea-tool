@@ -14,7 +14,7 @@ const formObjMap1 = {
     ]},
     jvm:{id:'jvm', title:'Java 环境路径（点击）', placeholder:'java 或者 java.exe 所在路径', colWidth:'col-md-4', needValid:true, validReg:/^.*[\\\/]java(\.exe)?$/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
     jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', placeholder:'可执行的 jar 文件' ,colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
-    poolName:{id:'poolName', autofocus:true, title:'配置名称', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 连接池名称', type:'text', typeInfo:[]},
+    poolName:{id:'poolName', autofocus:true, title:'配置名称', placeholder:'英文或者数字的组合',colWidth:'col-md-4', needValid:true, validReg:/^[0-9a-zA-Z]+$/, invalidInfo:'请填写名称, 英文或者数字的组合', type:'text', typeInfo:[]},
     jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
     jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
     dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 数据库用户名', type:'text', typeInfo:[]},
@@ -32,10 +32,7 @@ const formObjMap1 = {
     testJava:{id:'testJava', title:'Java测试', cssClass:'btn btn-secondary', type:'button'},
     clearConfig:{id:'clearConfig', title:'清空配置', cssClass:'btn btn-warning', type:'button'},
     clearCache:{id:'clearCache', title:'清空缓存', cssClass:'btn btn-info', type:'button'},
-    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[
-        {label:'无', value:''},
-        {label:'测试1', value:'test1'}
-    ]}
+    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[]}
 };
 
 //设计一个对象，用于信息填充处理
@@ -93,6 +90,47 @@ function validFormObject(tabId, formObjId){
         }
     }
     return result;
+}
+
+//收集表单中指定的表单对象的值
+function collectFormValue(tabId, formObjId){
+    //form对象
+    let myForm = $('#'+tabId).find('form').eq(0);
+    //内容的检索字符串
+    let contentString = '';
+    //内容对象
+    let formObj = formObjMap1[formObjId];
+    //由于勾选框 和 填写框处理 无法共用，所以要分开处理
+    switch(formObj.type){
+        case 'checkbox':
+            contentString = 'input[name="'+formObj.id+'"]:checked';
+            let targetCheckbox = myForm.find(contentString);
+            if(targetCheckbox.length>=1){
+                let tmpArray = [];
+                for(oriObj of targetCheckbox){
+                    tmpArray.push($(oriObj).val());
+                }
+                formObj.value = tmpArray.join(',');
+            }else{
+                formObj.value = '';
+            }
+            break;
+        case 'radio':
+            contentString = 'input[name="'+formObj.id+'"]:checked';
+            let targetRadio = myForm.find(contentString);
+            if(targetRadio.length==1){
+                formObj.value = targetRadio.val()+'';
+            }else{
+                formObj.value = '';
+            }
+            break;
+        default:
+            contentString = '#'+formObj.id;
+            let targetInput = myForm.find(contentString);
+            let value = targetInput.val()?targetInput.val()+'':'';
+            formObj.value = value;
+            break;
+    }
 }
 
 //校验整个表单的函数
@@ -182,6 +220,26 @@ function genForm(tabId, configObj){
     }
 }
 
+//这里用于在页面初始化后，加载全部配置文件信息
+async function genDropdownMenu(tabId){
+    //请求后台
+    let result = await ElectronAPI.getAllConfigId();
+    //根据反应的结果处理
+    if(result.status!='ok' && result.info){
+        await ElectronAPI.showAlert(result.info);
+    }else{
+        //开始处理插入
+        let idArray = result.data;
+        if(idArray && idArray.length>0){
+            let dropdownMenu = $('#'+tabId+' form .btn-group .dropdown-menu');
+            dropdownMenu.html('');
+            for(id of idArray){
+                dropdownMenu.append('<a class="dropdown-item" href="#" value="" id="'+id+'" onclick="readConfigAction(\''+id+'\')">'+id+'</a>');
+            }
+        }
+    }
+}
+
 //事件绑定处理
 function actionBinding(){
 
@@ -199,16 +257,22 @@ function actionBinding(){
                 //勾选框
                 $('input[name="'+formObj.id+'"]').on('click', (jqueryEvent)=>{
                     validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('name'));
+                    //在校验的同时，也将值绑定到 formObjMap1 的对象中
+                    collectFormValue('nav-baseconfig', $(jqueryEvent.currentTarget).attr('name'));
                 });
             }else if(!['button','buttonGroup'].includes(formObj.type)){
                 //文本输入框（jvm和jar点击事件触发文件选择，所以要分开处理）
                 if(['jvm','jar'].includes(formObj.id)){
                     $('#'+formObj.id).on('change', (jqueryEvent)=>{
                         validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('id'));
+                        //在校验的同时，也将值绑定到 formObjMap1 的对象中
+                        collectFormValue('nav-baseconfig',$(jqueryEvent.currentTarget).attr('id'));
                     });
                 }else{
                     $('#'+formObj.id).on('click keyup', (jqueryEvent)=>{
                         validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('id'));
+                        //在校验的同时，也将值绑定到 formObjMap1 的对象中
+                        collectFormValue('nav-baseconfig',$(jqueryEvent.currentTarget).attr('id'));
                     });
                 }
             }
@@ -244,6 +308,9 @@ $(document).ready(()=>{
     //开始处理表单生成
     genForm('nav-baseconfig', mybaseconfig);
 
+    //开始插入配置信息
+    genDropdownMenu('nav-baseconfig');
+
     //开始事件注册处理
     actionBinding();
 });
@@ -253,9 +320,51 @@ async function saveConfigAction(){
     //先检查合法性
     let isOk = validForm('nav-baseconfig');
     if(isOk){
-        //保存到缓存中
+        //组建一个对象，传送给后台处理
+        let myConfigMap = {
+            databaseType:formObjMap1['databaseType'].value, jvm:formObjMap1['jvm'].value,               jar:formObjMap1['jar'].value,
+            poolName:formObjMap1['poolName'].value,         jdbcDriver:formObjMap1['jdbcDriver'].value, jdbcUrl:formObjMap1['jdbcUrl'].value,
+            dbUser:formObjMap1['dbUser'].value,             dbPasswd:formObjMap1['dbPasswd'].value,     isAutoCommit:formObjMap1['isAutoCommit'].value,
+            connTimeout:formObjMap1['connTimeout'].value,   minThreadNum:formObjMap1['minThreadNum'].value, maxThreadNum:formObjMap1['maxThreadNum'].value
+        }
+        //传送到后台
+        let result = await ElectronAPI.saveConfig(myConfigMap);
+        if(result.status!='ok' && result.info){
+            //如果后台返回异常信息，则显示
+            await ElectronAPI.showAlert(result.info);
+        }else{
+            //将返回的配置文件名，插入按钮组
+            let dropdownMenu = $('#nav-baseconfig form .btn-group .dropdown-menu');
+            let aTags = dropdownMenu.find('a');
+            let hadSameName = false;
+            if(aTags.length>0){
+                for(a of aTags){
+                    if($(a).attr('id')==result.configFileName) {
+                        hadSameName=true;
+                        break;
+                    }
+                }
+            }
+            if(!hadSameName){
+                dropdownMenu.append('<a class="dropdown-item" href="#" value="" id="'+result.configFileName+'" onclick="readConfigAction(\''+result.configFileName+'\')">'+result.configFileName+'</a>');
+            }
+            await ElectronAPI.showAlert('配置信息已保存成功，配置名['+result.configFileName+']已添加至"调取已有配置"按钮');
+        }
     }else{
         await ElectronAPI.showAlert('表单尚未填写完整，请检查。');
+    }
+}
+
+//根据配置id，获取配置信息
+async function readConfigAction(configId){
+    //获取配置信息
+    let result = await ElectronAPI.readConfig(configId);
+    if(result.status!='ok' && result.info){
+        //显示异常信息
+        await ElectronAPI.showAlert(result.info);
+    }else{
+        //如果正常的话，就把返回的配置信息，填充到文本框和勾选框
+        await ElectronAPI.showAlert('你选择的是:'+configId);
     }
 }
 

@@ -45,6 +45,10 @@ function doIPC(){
     ipcMain.handle('file:fileselect', (event, fileFilters)=>{return ipc.fileselect(event, fileFilters, mainWindow)})
     //关于shell命令执行的处理 进程间通讯
     ipcMain.handle('shell:jar', (event, javaCommand, jarPath, jarArguments)=>{return ipc.execJar(event, javaCommand, jarPath, jarArguments)})
+    //关于数据库链接配置的保存、读取处理 进程间通讯
+    ipcMain.handle('db:saveconfig', (event, dbConfig)=>{return ipc.saveConfig(event, dbConfig)})
+    ipcMain.handle('db:readconfig', (event, configName)=>{return ipc.readConfig(event, configName)})
+    ipcMain.handle('db:getallconfigid', (event)=>{return ipc.getAllConfigId()})
 }
 
 //设置一个主函数
