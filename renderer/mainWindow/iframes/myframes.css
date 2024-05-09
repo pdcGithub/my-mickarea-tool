@@ -25,3 +25,9 @@ html, body {
 .is-invalid>.invalid-feedback{
     display: block;
 }
+
+/*调整样式，保持对齐*/
+.form-row>button, .form-row>[class*=btn]{
+    margin-left: 5px;
+    margin-right: 5px;
+}

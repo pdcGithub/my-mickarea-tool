@@ -27,12 +27,12 @@ const formObjMap1 = {
     minThreadNum:{id:'minThreadNum', title:'连接池最小线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过10', type:'text', typeInfo:[]},
     maxThreadNum:{id:'maxThreadNum', title:'连接池最大线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过50', type:'text', typeInfo:[]},
     //操作按钮
-    saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary mr-1', type:'button'},
-    testDB:{id:'testDB', title:'数据库测试', cssClass:'btn btn-success mr-1', type:'button'},
-    testJava:{id:'testJava', title:'Java测试', cssClass:'btn btn-secondary mr-1', type:'button'},
-    clearConfig:{id:'clearConfig', title:'清空配置', cssClass:'btn btn-warning mr-1', type:'button'},
-    clearCache:{id:'clearCache', title:'清空缓存', cssClass:'btn btn-info mr-1', type:'button'},
-    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary mr-1', type:'buttonGroup', typeInfo:[
+    saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary', type:'button'},
+    testDB:{id:'testDB', title:'数据库测试', cssClass:'btn btn-success', type:'button'},
+    testJava:{id:'testJava', title:'Java测试', cssClass:'btn btn-secondary', type:'button'},
+    clearConfig:{id:'clearConfig', title:'清空配置', cssClass:'btn btn-warning', type:'button'},
+    clearCache:{id:'clearCache', title:'清空缓存', cssClass:'btn btn-info', type:'button'},
+    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[
         {label:'无', value:''},
         {label:'测试1', value:'test1'}
     ]}
