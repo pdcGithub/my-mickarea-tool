@@ -49,6 +49,7 @@ function doIPC(){
     ipcMain.handle('db:saveconfig', (event, dbConfig)=>{return ipc.saveConfig(event, dbConfig)})
     ipcMain.handle('db:readconfig', (event, configName)=>{return ipc.readConfig(event, configName)})
     ipcMain.handle('db:getallconfigid', (event)=>{return ipc.getAllConfigId()})
+    ipcMain.handle('db:removeallconfig', (event)=>{return ipc.removeAllConfigFile()})
 }
 
 //设置一个主函数

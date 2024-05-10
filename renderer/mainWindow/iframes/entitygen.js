@@ -4,6 +4,19 @@ try{ ElectronAPI = window.parent.ElectronAPI}catch(e){ElectronAPI=undefined};
 // 判断是否在 app 中运行
 let isApp = ElectronAPI ? true : false;
 
+// 当文档加载完毕，执行这个函数
+$(document).ready(()=>{
+    
+    //开始处理表单生成
+    genForm('nav-baseconfig', mybaseconfig);
+
+    //开始插入配置信息
+    genDropdownMenu('nav-baseconfig');
+
+    //开始事件注册处理
+    actionBinding();
+});
+
 //设计一个表单对象
 const formObjMap1 = {
     //表单内容
@@ -12,8 +25,8 @@ const formObjMap1 = {
         {label:'Oracle 10+', value:'Oracle', checked:false},
         {label:'MS SqlServer 2008+', value:'SqlServer', checked:false}
     ]},
-    jvm:{id:'jvm', title:'Java 环境路径（点击）', placeholder:'java 或者 java.exe 所在路径', colWidth:'col-md-4', needValid:true, validReg:/^.*[\\\/]java(\.exe)?$/, invalidInfo:'请选择 Java 环境路径', type:'file', typeInfo:[]},
-    jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', placeholder:'可执行的 jar 文件' ,colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'file', typeInfo:[]},
+    jvm:{id:'jvm', title:'Java 环境路径（点击）', placeholder:'java 或者 java.exe 所在路径', colWidth:'col-md-4', needValid:true, validReg:/^.*[\\\/]java(\.exe)?$/, invalidInfo:'请选择 Java 环境路径', type:'text', typeInfo:[]},
+    jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', placeholder:'可执行的 jar 文件' ,colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'text', typeInfo:[]},
     poolName:{id:'poolName', autofocus:true, title:'配置名称', placeholder:'英文或者数字的组合',colWidth:'col-md-4', needValid:true, validReg:/^[0-9a-zA-Z]+$/, invalidInfo:'请填写名称, 英文或者数字的组合', type:'text', typeInfo:[]},
     jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
     jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
@@ -269,7 +282,7 @@ function actionBinding(){
                         collectFormValue('nav-baseconfig',$(jqueryEvent.currentTarget).attr('id'));
                     });
                 }else{
-                    $('#'+formObj.id).on('click keyup', (jqueryEvent)=>{
+                    $('#'+formObj.id).on('click keyup change', (jqueryEvent)=>{
                         validFormObject('nav-baseconfig', $(jqueryEvent.currentTarget).attr('id'));
                         //在校验的同时，也将值绑定到 formObjMap1 的对象中
                         collectFormValue('nav-baseconfig',$(jqueryEvent.currentTarget).attr('id'));
@@ -301,19 +314,6 @@ function actionBinding(){
     });
 
 }
-
-// 当文档加载完毕，执行这个函数
-$(document).ready(()=>{
-    
-    //开始处理表单生成
-    genForm('nav-baseconfig', mybaseconfig);
-
-    //开始插入配置信息
-    genDropdownMenu('nav-baseconfig');
-
-    //开始事件注册处理
-    actionBinding();
-});
 
 //按钮事件
 async function saveConfigAction(){
@@ -364,7 +364,39 @@ async function readConfigAction(configId){
         await ElectronAPI.showAlert(result.info);
     }else{
         //如果正常的话，就把返回的配置信息，填充到文本框和勾选框
-        await ElectronAPI.showAlert('你选择的是:'+configId);
+        for(obj in result.data){
+            //console.log(obj+","+result.data[obj]);
+            let type = formObjMap1[obj].type;
+            switch(type){
+                case 'radio':
+                    //radio 框需要将内容选中，设置checked属性
+                    let contentString1 = 'input[name="'+formObjMap1[obj].id+'"]';
+                    //将配置的选择显示到页面上
+                    $(contentString1).each((index,element)=>{
+                        if($(element).val()==result.data[obj]) $(element).click();
+                    });
+                    break;
+                case 'checkbox':
+                    //对于checkbox，多个值，有逗号分割符
+                    let myValue = result.data[obj].split(',');
+                    //checkbox 框需要将内容选中，设置checked属性
+                    let contentString2 = 'input[name="'+formObjMap1[obj].id+'"]';
+                    //清空原有选择
+                    $(contentString2).each((index,element)=>{
+                        if($(element).is(':checked')) $(element).click();
+                    });
+                    //将配置的选择显示到页面上
+                    $(contentString2).each((index,element)=>{
+                        if(myValue.includes($(element).val())) $(element).click();
+                    });
+                    break;
+                default:
+                    //一般都是文本框
+                    let contentString = '#'+formObjMap1[obj].id
+                    $(contentString).val(result.data[obj]).change();
+                    break;
+            }
+        }
     }
 }
 
@@ -397,16 +429,26 @@ async function testJavaAction(){
 }
 
 //清空配置事件
-function clearConfigAction(){
-    window.location.reload();
+async function clearConfigAction(){
+    let choose = await ElectronAPI.showConfirm('确定清空当前配置信息吗?');
+    if(choose.response==0) window.location.reload();
 }
 
 //清空缓存信息事件
 async function clearCacheAction(){
-    await ElectronAPI.showAlert('本功能暂未实现');
-}
-
-//调取已有配置事件
-function getCacheConfigAction(cacheId){
-
+    let choose = await ElectronAPI.showConfirm('确定要清空缓存信息吗？清空后，所有已保存的配置文件都将删除!');
+    if(choose.response==0){
+        //调取后台处理
+        let result = await ElectronAPI.removeAllConfig();
+        //根据返回的结果显示信息
+        if(result.status!='ok' && result.info){
+            await ElectronAPI.showAlert(result.info);
+        }else{
+            //删除位于'调取已有配置'按钮下的配置信息
+            let dropdownMenu = $('#nav-baseconfig form .btn-group .dropdown-menu');
+            dropdownMenu.html('');
+            //弹出提示信息
+            await ElectronAPI.showAlert('缓存中的配置文件已全部删除!');
+        }
+    }
 }

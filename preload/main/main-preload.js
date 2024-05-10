@@ -25,9 +25,10 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     //这里暴露一个 java 程序的调用方法
     execJar:(javaCommand, jarPath, jarArguments)=>ipcRenderer.invoke('shell:jar', javaCommand, jarPath, jarArguments),
 
-    //这里暴露3个 关于数据库配置文件的读写方法
+    //这里暴露4个 关于数据库配置文件的读写方法
     saveConfig:(dbConfig)=>ipcRenderer.invoke('db:saveconfig', dbConfig),
     readConfig:(configName)=>ipcRenderer.invoke('db:readconfig', configName),
-    getAllConfigId:()=>ipcRenderer.invoke('db:getallconfigid')
+    getAllConfigId:()=>ipcRenderer.invoke('db:getallconfigid'),
+    removeAllConfig:()=>ipcRenderer.invoke('db:removeallconfig')
 
 });
