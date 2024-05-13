@@ -28,10 +28,10 @@ const formObjMap1 = {
     jvm:{id:'jvm', title:'Java 环境路径（点击）', placeholder:'java 或者 java.exe 所在路径', colWidth:'col-md-4', needValid:true, validReg:/^.*[\\\/]java(\.exe)?$/, invalidInfo:'请选择 Java 环境路径', type:'text', typeInfo:[]},
     jar:{id:'jar', title:'Java 后端的Jar包路径（点击）', placeholder:'可执行的 jar 文件' ,colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 可执行 Jar包路径', type:'text', typeInfo:[]},
     poolName:{id:'poolName', autofocus:true, title:'配置名称', placeholder:'英文或者数字的组合',colWidth:'col-md-4', needValid:true, validReg:/^[0-9a-zA-Z]+$/, invalidInfo:'请填写名称, 英文或者数字的组合', type:'text', typeInfo:[]},
-    jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
-    jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 JDBC 链接信息', type:'text', typeInfo:[]},
-    dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请填写 数据库用户名', type:'text', typeInfo:[]},
-    dbPasswd:{id:'dbPasswd', title:'数据库用户密码', colWidth:'col-md-4', needValid:true, validReg:/^.+$/, invalidInfo:'请选择 数据库用户密码', type:'password', typeInfo:[]},
+    jdbcDriver:{id:'jdbcDriver', title:'JDBC 驱动的 Java 类名', placeholder:'com.test.driver',colWidth:'col-md-4', needValid:true, validReg:/^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)+$/, invalidInfo:'请填写 JDBC 驱动类名称', type:'text', typeInfo:[]},
+    jdbcUrl:{id:'jdbcUrl', title:'JDBC 链接字符串', placeholder:'jdbc:...',colWidth:'col-md-4', needValid:true, validReg:/^jdbc:(oracle|mysql|sqlserver):[\.=:@;0-9a-zA-Z\_\\\/]+$/, invalidInfo:'JDBC 链接异常', type:'text', typeInfo:[]},
+    dbUser:{id:'dbUser', title:'数据库用户名', colWidth:'col-md-4', needValid:true, validReg:/^(?!.*["'])(?=.+)/, invalidInfo:'请填写 数据库用户名(不包含双引号和单引号)', type:'text', typeInfo:[]},
+    dbPasswd:{id:'dbPasswd', title:'数据库用户密码', colWidth:'col-md-4', needValid:true, validReg:/^(?!.*["'])(?=.+)/, invalidInfo:'请选择 数据库用户密码(不包含双引号和单引号)', type:'password', typeInfo:[]},
     isAutoCommit:{id:'isAutoCommit', title:'数据库操作是否自动提交', colWidth:'col-md-4', needValid:true, validReg:undefined, invalidInfo:'请选择提交方式', type:'radio', typeInfo:[
         {label:'是', value:'true', checked:false},
         {label:'否', value:'false', checked:false}
@@ -402,7 +402,33 @@ async function readConfigAction(configId){
 
 //数据库测试事件
 async function testDBAction(){
-    await ElectronAPI.showAlert('本功能暂未实现');
+    //先校验判断第一页表单，是否填充完整
+    if(validForm('nav-baseconfig')){
+        let jarArguments = [];
+        let jarArgumentsKeys = ['databaseType', 'poolName', 'jdbcDriver', 'jdbcUrl', 'dbUser', 
+                                'dbPasswd', 'isAutoCommit', 'connTimeout', 'minThreadNum', 'maxThreadNum'];
+        //参数填充
+        for(key of jarArgumentsKeys){
+            jarArguments.push(formObjMap1[key].value.replace(/[\s\r\n]+/g,' ').trim());
+        }
+        //获取 jvm 路径 和 jar 路径
+        let jvmPath = formObjMap1.jvm.value;
+        let jarPath = formObjMap1.jar.value;
+        //调用jar执行处理
+        let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+        //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
+        if(result.status=='ok'){
+            if(result.info){
+                await ElectronAPI.showAlert('执行成功，'+result.info);
+            }else{
+                await ElectronAPI.showAlert('执行成功，没有任何消息返回');
+            }
+        }else{
+            await ElectronAPI.showAlert('执行失败，'+result.info);
+        }
+    }else{
+        await ElectronAPI.showAlert('表单尚未填写完毕，请检查...');
+    }
 }
 
 //Java调用测试事件
@@ -412,17 +438,21 @@ async function testJavaAction(){
     let jarOk = validFormObject('nav-baseconfig','jar');
     if( jvmOk && jarOk){
         //获取 jvm 路径 和 jar 路径
-        let jvmPath = $("#jvm").val();
-        let jarPath = $('#jar').val();
+        let jvmPath = formObjMap1.jvm.value;
+        let jarPath = formObjMap1.jar.value;
         //调用 java 命令，测试 jar 包能否正确调用并返回
-        let resultMsg = '';
-        try{
-            resultMsg = await ElectronAPI.execJar(jvmPath, jarPath);
-        }catch(ex){
-            resultMsg = '调用后台的处理程序出错，请检查jar包是否可执行，以及参数调用是否正常.';
+        //调用jar执行处理
+        let result = await ElectronAPI.execJar(jvmPath, jarPath);
+        //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
+        if(result.status=='ok'){
+            if(result.info){
+                await ElectronAPI.showAlert('执行成功，'+result.info);
+            }else{
+                await ElectronAPI.showAlert('执行成功，没有任何消息返回');
+            }
+        }else{
+            await ElectronAPI.showAlert('执行失败，'+result.info);
         }
-        //显示返回的信息
-        await ElectronAPI.showAlert(resultMsg);
     }else{
         await ElectronAPI.showAlert('请先填写 Java 环境路径 和 Jar 包路径');
     }

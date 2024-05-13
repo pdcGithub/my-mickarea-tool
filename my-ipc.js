@@ -4,16 +4,11 @@ const { execSync } = require('node:child_process')
 const os = require('node:os')
 const path = require('node:path')
 const fs = require('node:fs')
+const { mylogger } =  require('./my-log')
+const { myParams } = require('./static-parameters')
 
 //主进程 ipc 相关处理
 function MyIpc() {
-
-    //软件的主目录
-    this.MY_SOFTWARE_HOME_DIR   = os.homedir + path.sep + 'my-mickarea-tool';
-    //软件的配置文件存放位置
-    this.MY_SOFTWARE_CONFIG_DIR = this.MY_SOFTWARE_HOME_DIR + path.sep + 'config';
-    //软件的日志文件存放位置
-    this.MY_SOFTWARE_LOG_DIR    = this.MY_SOFTWARE_HOME_DIR + path.sep + 'log';
 
     //关于窗口一些行为的处理
     this.windowBtnBehavior = function(event, behavior, window){
@@ -67,6 +62,9 @@ function MyIpc() {
 
     //jar 执行处理
     this.execJar = function(event, javaCommand, jarPath, jarArguments){
+        //定义一个返回的结果对象
+        let result = {status:'ok', info:'', data:undefined};
+        //构造命令
         let myCommand = '"'+javaCommand+'" -jar "'+jarPath+'" ';
         if(jarArguments && jarArguments.length>0){
             for(arg of jarArguments){
@@ -74,12 +72,24 @@ function MyIpc() {
             }
         }
         //打印命令
-        //console.log(myCommand);
+        mylogger.debug('打印命令...');
+        mylogger.debug(myCommand);
         //执行命令
-        let buffer = execSync(myCommand, {timeout:5000})
-        //console.log(buffer.toString());
+        try{
+            result.info = execSync(myCommand, {timeout:5000}).toString();
+            result.status='ok';
+        }catch(error){
+            result.info=error.message;
+            if(result.info.indexOf('Command failed')>=0){
+                result.info = '调用的命令出错，请检查 jar 包是否可执行，以及 命令是否正确。具体异常信息，已记录到日志中。';
+            }
+            result.status='error';
+            mylogger.error('执行出错，异常信息如下：');
+            mylogger.error(error);
+        }
+        mylogger.debug(result);
         //返回结果
-        return buffer.toString();
+        return result;
     };
 
     //保存配置 
@@ -88,8 +98,8 @@ function MyIpc() {
         let result = {status:'ok', info:'', configFileName:''};
         try{
             //文件夹不存在，则创建
-            if(!fs.existsSync(this.MY_SOFTWARE_CONFIG_DIR)){
-                fs.mkdirSync(this.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
+            if(!fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
+                fs.mkdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
             }
             //校验传来参数是否完整
             let isOk = true;
@@ -106,7 +116,7 @@ function MyIpc() {
             }else{
                 //构造文件名
                 let fileName = dbConfig['poolName']+'.properties';
-                let filePath = this.MY_SOFTWARE_CONFIG_DIR + path.sep + fileName;
+                let filePath = myParams.MY_SOFTWARE_CONFIG_DIR + path.sep + fileName;
                 //删除同名文件
                 fs.rmSync(filePath, {force:true});
                 //循环遍历对象内容，以追加形式插入信息
@@ -131,7 +141,7 @@ function MyIpc() {
         //文件名校验正则
         let fileRegexp = /^[0-9a-zA-Z]+\.properties$/;
         try{
-            let filePath = this.MY_SOFTWARE_CONFIG_DIR + path.sep + configName;
+            let filePath = myParams.MY_SOFTWARE_CONFIG_DIR + path.sep + configName;
             //参数检查
             if(typeof configName !== 'string' || !fileRegexp.test(configName)) throw new Error('传来的配置文件名['+configName+']异常，请检查!');
             if(!fs.existsSync(filePath)) throw new Error('本地文件['+filePath+']不存在');
@@ -159,9 +169,9 @@ function MyIpc() {
     this.getAllConfigId = function(){
         let result = {status:'ok', info:'', data:[]}
         try{
-            if(fs.existsSync(this.MY_SOFTWARE_CONFIG_DIR)){
+            if(fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 //如果文件夹存在，才执行遍历
-                let filesArray = fs.readdirSync(this.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
+                let filesArray = fs.readdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
                 if(filesArray && filesArray.length>0){
                     for(file of filesArray){
                         if(file.isFile()) result.data.push(file.name);
@@ -180,14 +190,14 @@ function MyIpc() {
         let result = {status:'ok', info:''}
         try{
             //如果有配置文件夹，则执行删除
-            if(fs.existsSync(this.MY_SOFTWARE_CONFIG_DIR)){
+            if(fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 //遍历文件夹下的所有配置文件
-                let filesArray = fs.readdirSync(this.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
+                let filesArray = fs.readdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
                 if(filesArray && filesArray.length>0){
                     for(file of filesArray){
                         //判断是否为 配置文件，要与文件后缀匹配
                         if(file.isFile() && /^.+\.properties$/.test(file.name)){
-                            fs.rmSync(this.MY_SOFTWARE_CONFIG_DIR+path.sep+file.name, {force:true});
+                            fs.rmSync(myParams.MY_SOFTWARE_CONFIG_DIR+path.sep+file.name, {force:true});
                         }
                     }
                 }
