@@ -7,8 +7,11 @@ let isApp = ElectronAPI ? true : false;
 // 当文档加载完毕，执行这个函数
 $(document).ready(()=>{
     
-    //开始处理表单生成
+    //开始处理 第一页 表单生成
     genForm('nav-baseconfig', mybaseconfig);
+
+    //开始处理 第二页 表单生成
+    genForm('nav-dbobject', myobjectconfig);
 
     //开始插入配置信息
     genDropdownMenu('nav-baseconfig');
@@ -19,7 +22,7 @@ $(document).ready(()=>{
 
 //设计一个表单对象
 const formObjMap1 = {
-    //表单内容
+    //表单内容 1
     databaseType:{id:'databaseType', title:'数据库类型', colWidth:'col-md-4', needValid:true, validReg:undefined, invalidInfo:'请选择数据库类型', type:'radio', typeInfo:[
         {label:'MySql 8+', value:'MySql', checked:false},
         {label:'Oracle 10+', value:'Oracle', checked:false},
@@ -39,13 +42,36 @@ const formObjMap1 = {
     connTimeout:{id:'connTimeout', title:'数据库链接超时阈值（毫秒）', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写 阈值', type:'text', typeInfo:[]},
     minThreadNum:{id:'minThreadNum', title:'连接池最小线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过10', type:'text', typeInfo:[]},
     maxThreadNum:{id:'maxThreadNum', title:'连接池最大线程数', colWidth:'col-md-4', needValid:true, validReg:/^[1-9](\d+)?$/, invalidInfo:'请填写线程数，不超过50', type:'text', typeInfo:[]},
-    //操作按钮
+    
+    //表单内容 2
+    charset:{id:'charset', title:"文件字符集", colWidth:"col-md-6", needValid:true, validReg:undefined, invalidInfo:'请选择字符集', type:'radio', typeInfo:[
+        {label:'UTF-8', value:'UTF-8', checked:false},
+        {label:'GBK', value:'GBK', checked:false},
+        {label:'GB2312', value:'GB2312', checked:false},
+        {label:'GB18030', value:'GB18030', checked:false},
+        {label:'BIG5', value:'BIG5', checked:false},
+        {label:'ISO-8859-1', value:'ISO-8859-1', checked:false}
+    ]},
+    actionType:{id:'actionType', title:"对象 / Sql语句", colWidth:"col-md-6", needValid:true, validReg:undefined, invalidInfo:'请选择操作类型', type:'radio', typeInfo:[
+        {label:'数据库表、视图', value:'object', checked:false},
+        {label:'Sql 语句', value:'sql', checked:false}
+    ]},
+    schema:{id:'schema', title:"数据库实例名", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
+    schemaUser:{id:'schemaUser', title:"数据库对象所属用户", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
+    sqlObjects:{id:'sqlObjects', title:"数据库对象", colWidth:"col-md-12", needValid:true, validReg:/^.+$/, invalidInfo:'请选择数据库对象', type:'text', typeInfo:[]},
+    sqlText:{id:'sqlText', title:"要映射的Sql语句", colWidth:"col-md-12", needValid:true, validReg:/^.+$/, invalidInfo:'请填写sql语句', type:'textarea', rows:'6'},
+    
+    //操作按钮 1
     saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary', type:'button'},
     testDB:{id:'testDB', title:'数据库测试', cssClass:'btn btn-success', type:'button'},
     testJava:{id:'testJava', title:'Java测试', cssClass:'btn btn-secondary', type:'button'},
     clearConfig:{id:'clearConfig', title:'清空配置', cssClass:'btn btn-warning', type:'button'},
     clearCache:{id:'clearCache', title:'清空缓存', cssClass:'btn btn-info', type:'button'},
-    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[]}
+    pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[]},
+
+    //操作按钮 2
+    showDBObjects:{id:'showDBObjects', title:'选取库表、视图', cssClass:'btn btn-primary', type:'button'},
+    genDBObjects:{id:'genDBObjects', title:'生成实体', cssClass:'btn btn-success', type:'button'}
 };
 
 //设计一个对象，用于信息填充处理
@@ -57,6 +83,17 @@ const mybaseconfig = [
     [formObjMap1['connTimeout'], formObjMap1['minThreadNum'], formObjMap1['maxThreadNum']],
     //按钮配置
     [formObjMap1['saveConfig'], formObjMap1['testDB'], formObjMap1['testJava'], formObjMap1['clearConfig'], formObjMap1['clearCache'], formObjMap1['pickConfig']]
+];
+
+//设计一个对象，用于第二页填充处理
+const myobjectconfig = [
+    //内容
+    [formObjMap1['charset'], formObjMap1['actionType']],
+    [formObjMap1['schema'], formObjMap1['schemaUser']],
+    [formObjMap1['sqlObjects']],
+    [formObjMap1['sqlText']],
+    //按钮
+    [formObjMap1['showDBObjects'], formObjMap1['genDBObjects']]
 ];
 
 //校验单个输入或者选择框的函数
@@ -88,11 +125,12 @@ function validFormObject(tabId, formObjId){
                 targetGroup.parent().parent().removeClass('is-invalid');
             }
         }else{
-            //如果是 file, text, password
+            //如果是 file, text, password, textarea
             contentString = '#'+formObj.id;
             let targetInput = myForm.find(contentString);
             //如果有校验正则，并且校验失败，则显示错误提示（否则显示正确提示）
-            if(formObj.validReg && !formObj.validReg.test(targetInput.val())){
+            //如果是 disabled 的输入框，则不校验
+            if(formObj.validReg && !targetInput.attr('disabled') && !formObj.validReg.test(targetInput.val())){
                 result = false;
                 //如果没有这个样式，则添加
                 if(!targetInput.hasClass('is-invalid')) targetInput.addClass('is-invalid');
@@ -157,6 +195,13 @@ function validForm(tabId){
                 }
             }
             break;
+        case 'nav-dbobject':
+            for(row of myobjectconfig){
+                for(formObj of row){
+                    if(!validFormObject(tabId, formObj.id)) result=false;
+                }
+            }
+            break;
         default:
             break;
     }
@@ -211,11 +256,17 @@ function genForm(tabId, configObj){
                     colDiv.append('<div class="invalid-feedback">'+col.invalidInfo+'</div>');
                     tmpCol.append(colDiv);
                     break;
-                case 'password':
-                    // password 同 text 处理
-                case 'file':
-                    // file 同 text 处理
+                case 'textarea':
+                    tmpCol.addClass('form-group '+col.colWidth);
+                    tmpCol.append('<label>'+col.title+'</label>');
+                    let autofocusTextarea = col.autofocus ? 'autofocus' : '';
+                    tmpCol.append('<textarea '+autofocusTextarea+' rows="'+(col.rows?col.rows:5)+'" class="form-control" id="'+col.id+'" autocomplete="off" placeholder="'+(!col.placeholder?'':col.placeholder)+'"/>');
+                    //添加异常信息显示区
+                    tmpCol.append('<div class="invalid-feedback">'+col.invalidInfo+'</div>');
+                    break;
                 default:
+                    // file 同 text 处理
+                    // password 同 text 处理
                     //默认作为 text 处理
                     tmpCol.addClass('form-group '+col.colWidth);
                     tmpCol.append('<label>'+col.title+'</label>');
@@ -262,8 +313,12 @@ function actionBinding(){
     $('#testJava').on('click', testJavaAction);
     $('#clearConfig').on('click', clearConfigAction);
     $('#clearCache').on('click', clearCacheAction);
+
+    //绑定第2页按钮事件
+    $("#showDBObjects").on('click', showDBObjectsAction);
+    $("#genDBObjects").on('click', genDBObjectsAction);
     
-    //通用的表单内容的事件处理（输入框 和 勾选框）
+    //第一页 ======================== 表单的事件绑定，通用的表单内容的事件处理（输入框 和 勾选框）
     for(row of mybaseconfig){
         for(formObj of row){
             if(['radio', 'checkbox'].includes(formObj.type)){
@@ -312,6 +367,40 @@ function actionBinding(){
             $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
         }
     });
+
+    //第二页 ======================== 事件绑定处理
+    for(row of myobjectconfig){
+        for(formObj of row){
+            if(['radio', 'checkbox'].includes(formObj.type)){
+                //勾选框
+                $('input[name="'+formObj.id+'"]').on('click', (jqueryEvent)=>{
+                    validFormObject('nav-dbobject', $(jqueryEvent.currentTarget).attr('name'));
+                    //在校验的同时，也将值绑定到 formObjMap1 的对象中
+                    collectFormValue('nav-dbobject', $(jqueryEvent.currentTarget).attr('name'));
+                    //如果是 ‘对象 / Sql语句’选择框，则需要处理输入框disabled的问题
+                    if($(jqueryEvent.currentTarget).attr('name')=='actionType'){
+                        if(formObjMap1.actionType.value=='object'){
+                            $("#sqlObjects").removeAttr('disabled');
+                            $("#sqlObjects").val('').change();
+                            $("#sqlText").attr('disabled',true);
+                            $("#sqlText").val('').change();
+                        }else if(formObjMap1.actionType.value=='sql'){
+                            $("#sqlObjects").attr('disabled', true);
+                            $("#sqlObjects").val('').change();
+                            $("#sqlText").removeAttr('disabled');
+                            $("#sqlText").val('').change();
+                        }
+                    }
+                });
+            }else if(!['button','buttonGroup'].includes(formObj.type)){
+                $('#'+formObj.id).on('click keyup change', (jqueryEvent)=>{
+                    validFormObject('nav-dbobject', $(jqueryEvent.currentTarget).attr('id'));
+                    //在校验的同时，也将值绑定到 formObjMap1 的对象中
+                    collectFormValue('nav-dbobject',$(jqueryEvent.currentTarget).attr('id'));
+                });
+            }
+        }
+    }
 
 }
 
@@ -418,11 +507,7 @@ async function testDBAction(){
         let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
         //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
         if(result.status=='ok'){
-            if(result.info){
-                await ElectronAPI.showAlert('执行成功，'+result.info);
-            }else{
-                await ElectronAPI.showAlert('执行成功，没有任何消息返回');
-            }
+            await ElectronAPI.showAlert('执行成功，'+result.info);
         }else{
             await ElectronAPI.showAlert('执行失败，'+result.info);
         }
@@ -445,11 +530,7 @@ async function testJavaAction(){
         let result = await ElectronAPI.execJar(jvmPath, jarPath);
         //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
         if(result.status=='ok'){
-            if(result.info){
-                await ElectronAPI.showAlert('执行成功，'+result.info);
-            }else{
-                await ElectronAPI.showAlert('执行成功，没有任何消息返回');
-            }
+            await ElectronAPI.showAlert('执行成功，'+result.info);
         }else{
             await ElectronAPI.showAlert('执行失败，'+result.info);
         }
@@ -482,3 +563,53 @@ async function clearCacheAction(){
         }
     }
 }
+
+//=======================================================================
+//选取库表、视图操作
+async function showDBObjectsAction(){
+    try{
+        if(!validForm('nav-baseconfig')) throw new Error('第一页，数据库基础配置尚未填写完毕!');
+        //开始校验 部分校验，因为选取库表时，不需要全部填写完整
+        let actionTypeOk = validFormObject('nav-dbobject', formObjMap1.actionType.id);
+        let schemaOk = validFormObject('nav-dbobject', formObjMap1.schema.id);
+        let schemaUserOk = validFormObject('nav-dbobject', formObjMap1.schemaUser.id);
+        if(actionTypeOk && schemaOk && schemaUserOk){
+            //开始调用
+            let jarArguments = [];
+            let jarArgumentsKeys = ['databaseType', 'poolName', 'jdbcDriver', 'jdbcUrl', 'dbUser', 
+                                    'dbPasswd', 'isAutoCommit', 'connTimeout', 'minThreadNum', 'maxThreadNum',
+                                    'schema', 'schemaUser'];
+            //参数填充
+            for(key of jarArgumentsKeys){
+                jarArguments.push(formObjMap1[key].value.replace(/[\s\r\n]+/g,' ').trim());
+            }
+            //获取 jvm 路径 和 jar 路径
+            let jvmPath = formObjMap1.jvm.value;
+            let jarPath = formObjMap1.jar.value;
+            //调用jar执行处理
+            let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+            if(result.status=='ok'){
+                //获取到表和视图信息，则开始构建一个 选择界面
+                await ElectronAPI.showAlert('执行成功，'+result.info);
+            }else{
+                throw new Error('执行失败，'+result.info);
+            }
+        }else{
+            throw new Error('所需配置尚未填写完毕，请检查!');
+        }
+    }catch(error){
+        await ElectronAPI.showAlert(error.message);
+    }
+}
+
+//生成实体处理
+async function genDBObjectsAction(){
+    try{
+        if(!validForm('nav-baseconfig')) throw new Error('第一页，数据库基础配置尚未填写完毕!');
+        if(!validForm('nav-dbobject')) throw new Error('第二页，信息尚未填写完毕，请检查!');
+        //开始处理
+        await ElectronAPI.showAlert('测试');
+    }catch(error){
+        await ElectronAPI.showAlert(error.message);
+    }
+} 

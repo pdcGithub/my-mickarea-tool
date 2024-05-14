@@ -30,10 +30,47 @@
                 <form>
                 </form>
             </div>
-            <div id="nav-dbobject" class="tab-pane fade">zzz</div>
-            <div id="nav-result" class="tab-pane fade">ooo</div>
+            <div id="nav-dbobject" class="tab-pane fade pt-2">
+                <!-- 数据库对象信息，布局处理 -->
+                <div class="alert alert-primary">这个分页用于配置要生成实体的文件信息。比如：表名，文件编码，等等...</div>
+                <form>
+                </form>
+            </div>
+            <div id="nav-result" class="tab-pane fade pt-2">
+                <!-- 生成结果的信息展示 -->
+                <div class="alert alert-primary">这个分页用于展示生成结果相关信息</div>
+                <div class="table-responsive-xl">
+                    <table class="table table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>数据库对象名</th>
+                                <th>实体对象名</th>
+                                <th>处理状态</th>
+                                <th>操作</th>
+                                <th>文件存放路径</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>TEST_TAB_1</td>
+                                <td>TestTab1</td>
+                                <td>ok</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm">打开文件夹</button>
+                                    <button class="btn btn-success btn-sm">打开文件</button>
+                                </td>
+                                <td>D:\sflksf\sfdsf\sfdsf\TestTab1.java</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- 页面的模态信息窗 -->
 
     <!-- 引入 jQuery 的 js 文件和 bootstrap 的 js 文件 -->
     <script src="../../thirdparty/jQuery/jquery-3.7.1.min.js"></script>
