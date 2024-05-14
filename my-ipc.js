@@ -76,8 +76,18 @@ function MyIpc() {
         mylogger.debug(myCommand);
         //执行命令
         try{
-            result.info = execSync(myCommand, {timeout:5000}).toString();
-            result.status='ok';
+            //先获取jar的后台输出，然后对信息处理完毕，再返回
+            let jarMessage = execSync(myCommand, {timeout:5000}).toString();
+            if(jarMessage && jarMessage.indexOf('error:')==0){
+                result.status='error';
+                result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
+            }else if(jarMessage && jarMessage.indexOf('success:')==0){
+                result.status='ok';
+                result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
+            }else{
+                result.status='error';
+                result.info='执行异常，jar 包程序没有内容返回.';
+            }
         }catch(error){
             result.info=error.message;
             if(result.info.indexOf('Command failed')>=0){
