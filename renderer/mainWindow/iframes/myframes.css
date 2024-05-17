@@ -31,3 +31,8 @@ html, body {
     margin-left: 5px;
     margin-right: 5px;
 }
+
+/*设置 模态窗的宽度 */
+.my-modal-dialog{
+    max-width: 750px !important;
+}
