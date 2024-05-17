@@ -384,11 +384,13 @@ function actionBinding(){
                             $("#sqlObjects").val('').change();
                             $("#sqlText").attr('disabled',true);
                             $("#sqlText").val('').change();
+                            $("#showDBObjects").removeAttr("disabled");
                         }else if(formObjMap1.actionType.value=='sql'){
                             $("#sqlObjects").attr('disabled', true);
                             $("#sqlObjects").val('').change();
                             $("#sqlText").removeAttr('disabled');
                             $("#sqlText").val('').change();
+                            $("#showDBObjects").attr("disabled", true);
                         }
                     }
                 });
@@ -586,13 +588,16 @@ async function showDBObjectsAction(){
             //获取 jvm 路径 和 jar 路径
             let jvmPath = formObjMap1.jvm.value;
             let jarPath = formObjMap1.jar.value;
-            //调用jar执行处理
+            //先打开模态窗
+            fillInModalBody('请稍后，数据加载中 ......');
+            $('#myDBObjects').modal('show');
+            //然后，调用jar执行处理
             let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
-            if(result.status=='ok'){
+            if(result.status=='ok' && result.data){
                 //获取到表和视图信息，则开始构建一个 选择界面
-                await ElectronAPI.showAlert('执行成功，'+result.info);
+                fillInModalBody(result.data);
             }else{
-                throw new Error('执行失败，'+result.info);
+                fillInModalBody('执行失败，异常信息如下：'+result.info);
             }
         }else{
             throw new Error('所需配置尚未填写完毕，请检查!');
@@ -613,3 +618,51 @@ async function genDBObjectsAction(){
         await ElectronAPI.showAlert(error.message);
     }
 } 
+
+//进行模态窗内容构建
+function fillInModalBody(data){
+    //console.log(data);
+    //内容标签对象
+    let modalBody = $('#myDBObjects .modal-body').eq(0);
+    //清空内容
+    modalBody.html('');
+    //根据类型处理
+    if(typeof data === 'string'){
+        modalBody.append('<p>'+data+'</p>');
+    }else if(typeof data === 'object'){
+        //开始填充
+        if(data.length>0){
+            //动态构建数据库表和视图的对象信息
+            let form = $('<form>');
+            let colNum = 3;  //将内容分组为多少列
+            let rowNum = parseInt(data.length/colNum) + data.length%colNum; //根据分组的列数，计算有多少行
+            let tmpDiv = '';
+            for(let i=0;i<rowNum;i++){
+                //每行新建一个行对象
+                tmpDiv = $('<div class="form-row">');
+                for(let j=0;j<colNum;j++){
+                    //每列创建一个列对象，放入 行对象；
+                    if(i*colNum+j<data.length){
+                       let col = $('<div class="form-group col-md-'+(parseInt(12/colNum))+'">');
+                       let checkbox = $('<div class="custom-control custom-checkbox">');
+                       checkbox.append('<input type="checkbox" class="custom-control-input" id="chk'+(i*colNum+j)+'" value="'+data[i*colNum+j]+'">');
+                       checkbox.append('<label class="custom-control-label" for="chk'+(i*colNum+j)+'">'+data[i*colNum+j]+'</label>');
+                       col.append(checkbox);
+                       tmpDiv.append(col);
+                    }else{
+                        //超过数据长度后，退出循环
+                        break;
+                    }
+                }
+                //加入form
+                form.append(tmpDiv);
+            }
+            //将form放入body中
+            modalBody.append(form);
+        }else{
+            modalBody.append('<p>返回的数据库对象信息长度为 0 ，请检查参数是否异常...</p>');
+        }
+    }else{
+        modalBody.append('<p>数据异常，无法解析...</p>');
+    }
+}
