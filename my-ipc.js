@@ -84,6 +84,11 @@ function MyIpc() {
             }else if(jarMessage && jarMessage.indexOf('success:')==0){
                 result.status='ok';
                 result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
+                if(result.info.indexOf('[')==0){
+                    //如果有库表信息返回，则转换为 data
+                    result.data = JSON.parse(result.info);
+                    result.info = "";
+                }
             }else{
                 result.status='error';
                 result.info='执行异常，jar 包程序没有内容返回.';
