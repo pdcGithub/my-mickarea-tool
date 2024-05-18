@@ -16,6 +16,14 @@ https://www.electronjs.org/docs/latest/tutorial/tutorial-prerequisites
 
 ---
 
+related project information:
+
+与这个工具相关的项目信息如下:
+
+https://github.com/pdcGithub/my-javabean-generator
+
+---
+
 How To Build This Project
 
 如何构建此项目
