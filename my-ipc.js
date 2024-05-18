@@ -1,5 +1,5 @@
 //添加 electron 依赖
-const { dialog } = require('electron')
+const { dialog, shell } = require('electron')
 const { execSync } = require('node:child_process')
 const os = require('node:os')
 const path = require('node:path')
@@ -65,10 +65,10 @@ function MyIpc() {
         //定义一个返回的结果对象
         let result = {status:'ok', info:'', data:undefined};
         //构造命令
-        let myCommand = '"'+javaCommand+'" -jar "'+jarPath+'" ';
+        let myCommand = '"'+javaCommand.replaceAll('"','\\"')+'" -jar "'+jarPath.replaceAll('"','\\"')+'" ';
         if(jarArguments && jarArguments.length>0){
             for(arg of jarArguments){
-                myCommand += ' "'+arg+'" ';
+                myCommand += ' "'+arg.replaceAll('"','\\"')+'" ';
             }
         }
         //打印命令
@@ -222,6 +222,16 @@ function MyIpc() {
             result.info=error.message;
         }
         return result;
+    };
+
+    //获取静态配置参数
+    this.getStaticParam = function(name){
+        return myParams[name];
+    };
+
+    //打开文件夹、或者文件
+    this.openFilePath = function(path){
+        return shell.openPath(path);
     };
 
 };
