@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     getElectronVersion:()=>process.versions.electron,
     //关于本软件的版本号
     getAppVersion:()=>ipcRenderer.invoke('base:appversion'),
+    //关于本软件的一些静态参数信息
+    getStaticParameter:(name)=>ipcRenderer.invoke('base:staticparameter', name),
     
     // 这里暴漏一个 处理窗口最小化、最大化、以及关闭的方法
     // behavior 是操作类型的字符串
@@ -21,6 +23,8 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
 
     // 这里暴露一个 文件选择框的处理方法
     showFileDialog:(fileFilters)=>ipcRenderer.invoke('file:fileselect', fileFilters),
+    //这里暴露一个 文件路径打开的处理方法
+    filePathOpen:(path)=>ipcRenderer.invoke('file:openpath', path),
 
     //这里暴露一个 java 程序的调用方法
     execJar:(javaCommand, jarPath, jarArguments)=>ipcRenderer.invoke('shell:jar', javaCommand, jarPath, jarArguments),
