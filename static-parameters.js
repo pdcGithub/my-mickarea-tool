@@ -18,10 +18,16 @@ const MY_SOFTWARE_CONFIG_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'config'
 const MY_SOFTWARE_LOG_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'log'
 
 /**
+ * Java 实体类的存放目录
+ */
+const MY_SOFTWARE_ENTITY_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'entities'
+
+/**
  * 导出常量
  */
 exports.myParams = {
     MY_SOFTWARE_HOME_DIR,
     MY_SOFTWARE_CONFIG_DIR,
-    MY_SOFTWARE_LOG_DIR
+    MY_SOFTWARE_LOG_DIR,
+    MY_SOFTWARE_ENTITY_DIR
 };
