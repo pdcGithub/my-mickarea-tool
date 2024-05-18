@@ -58,8 +58,8 @@ const formObjMap1 = {
     ]},
     schema:{id:'schema', title:"数据库实例名", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
     schemaUser:{id:'schemaUser', title:"数据库对象所属用户", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
-    sqlObjects:{id:'sqlObjects', title:"数据库对象", colWidth:"col-md-12", needValid:true, validReg:/^.+$/, invalidInfo:'请选择数据库对象', type:'text', typeInfo:[]},
-    sqlText:{id:'sqlText', title:"要映射的Sql语句", colWidth:"col-md-12", needValid:true, validReg:/^.+$/, invalidInfo:'请填写sql语句', type:'textarea', rows:'6'},
+    sqlObjects:{id:'sqlObjects', title:"数据库对象", colWidth:"col-md-12", needValid:true, validReg:/^[\$\_a-zA-Z0-9]+(\,[\$\_a-zA-Z0-9]+)*$/, invalidInfo:'请选择数据库对象', type:'text', typeInfo:[]},
+    sqlText:{id:'sqlText', title:"要映射的Sql语句", colWidth:"col-md-12", needValid:true, validReg:/^(?!.*["])(?=.+)/, invalidInfo:'请填写sql语句', type:'textarea', rows:'6'},
     
     //操作按钮 1
     saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary', type:'button'},
@@ -317,6 +317,9 @@ function actionBinding(){
     //绑定第2页按钮事件
     $("#showDBObjects").on('click', showDBObjectsAction);
     $("#genDBObjects").on('click', genDBObjectsAction);
+
+    //模态窗按钮事件绑定
+    $("#modalSave").on('click', getCheckedObjFromModalBody);
     
     //第一页 ======================== 表单的事件绑定，通用的表单内容的事件处理（输入框 和 勾选框）
     for(row of mybaseconfig){
@@ -612,12 +615,43 @@ async function genDBObjectsAction(){
     try{
         if(!validForm('nav-baseconfig')) throw new Error('第一页，数据库基础配置尚未填写完毕!');
         if(!validForm('nav-dbobject')) throw new Error('第二页，信息尚未填写完毕，请检查!');
-        //开始处理
-        await ElectronAPI.showAlert('测试');
+        //开始处理（获取实体存放路径）
+        let entityDir = await ElectronAPI.getStaticParameter('MY_SOFTWARE_ENTITY_DIR');
+        //开始收集参数
+        let jarArguments = [];
+        let jarArgumentsKeys = ['databaseType', 'poolName', 'jdbcDriver', 'jdbcUrl', 'dbUser', 
+                                'dbPasswd', 'isAutoCommit', 'connTimeout', 'minThreadNum', 'maxThreadNum',
+                                'schema', 'schemaUser', 'charset', 'actionType'];
+        //参数填充
+        for(key of jarArgumentsKeys){
+            jarArguments.push(formObjMap1[key].value.replace(/[\s\r\n]+/g,' ').trim());
+        }
+        //根据actiionType 选择要填充的内容
+        if(formObjMap1['actionType'].value=='object'){
+            jarArguments.push(formObjMap1['sqlObjects'].value.replace(/[\s\r\n]+/g,' ').trim());
+        }else if(formObjMap1['actionType'].value=='sql'){
+            jarArguments.push(formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
+        }
+        //最后加上 实体存放路径
+        jarArguments.push(entityDir);
+        //获取 jvm 路径 和 jar 路径
+        let jvmPath = formObjMap1.jvm.value;
+        let jarPath = formObjMap1.jar.value;
+        //切换到第3页，显示内容
+        beforeGetDBResult('请稍后......');
+        $("#nav-result-tab").click();
+        //调用jar包执行
+        let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+        if(result.status=='ok' && result.data){
+            //按照表格，构建执行信息
+            afterGetDBResult(result.data);
+        }else{
+            await ElectronAPI.showAlert('执行失败，异常信息如下：'+result.info);
+        }
     }catch(error){
         await ElectronAPI.showAlert(error.message);
     }
-} 
+}
 
 //进行模态窗内容构建
 function fillInModalBody(data){
@@ -635,7 +669,7 @@ function fillInModalBody(data){
             //动态构建数据库表和视图的对象信息
             let form = $('<form>');
             let colNum = 3;  //将内容分组为多少列
-            let rowNum = parseInt(data.length/colNum) + data.length%colNum; //根据分组的列数，计算有多少行
+            let rowNum = parseInt(data.length/colNum) + (data.length%colNum==0?0:1); //根据分组的列数，计算有多少行
             let tmpDiv = '';
             for(let i=0;i<rowNum;i++){
                 //每行新建一个行对象
@@ -665,4 +699,85 @@ function fillInModalBody(data){
     }else{
         modalBody.append('<p>数据异常，无法解析...</p>');
     }
+}
+
+//从模态窗中获取选中的表或者视图信息
+function getCheckedObjFromModalBody(){
+    //模态窗的body对象
+    let modalBody = $("#myDBObjects .modal-body");
+    //选择框
+    let checkboxObjs = modalBody.find('input[type="checkbox"]');
+    if(checkboxObjs.length>0){
+        //如果有选择框，则遍历，获取已勾选的值
+        let objArray = [];
+        checkboxObjs.each((index,element)=>{
+            if($(element).is(':checked')){
+                objArray.push($(element).val().toUpperCase());
+            }
+        });
+        //根据已选数据，赋值选择框
+        $("#sqlObjects").val(objArray.join(',')).change();
+    }
+    //关闭模态窗口
+    $('#myDBObjects').modal('hide');
+}
+
+//返回结果前的第3页处理
+function beforeGetDBResult(message){
+    let tbody = $('#nav-result table tbody').eq(0);
+    //清空原有信息
+    tbody.html('');
+    //构建一行提示信息
+    let tr = $('<tr>');
+    tr.append($('<td>1</td>'));
+    tr.append($('<td>'+message+'</td>'));
+    tr.append($('<td></td>'));
+    tr.append($('<td></td>'));
+    tr.append($('<td></td>'));
+    tr.append($('<td></td>'));
+    tr.append($('<td></td>'));
+    tbody.append(tr);
+}
+
+//显示并构建第3页信息
+function afterGetDBResult(data){
+    let tbody = $('#nav-result table tbody').eq(0);
+    //清空原有信息
+    tbody.html('');
+    //
+    let statusBtn1 = '<button class="btn btn-success btn-sm mt-1">ok</button>';
+    let statusBtn2 = '<button class="btn btn-danger btn-sm mt-1">error</button>';
+    //
+    let btn1 = '<button class="btn btn-primary btn-sm ml-1 mt-1" onclick="openEntityDir()">打开文件夹</button>';
+    let btn2 = '<button class="btn btn-info btn-sm ml-1 mt-1" onclick="openEntityFile(this)">打开文件</button>';
+    //根据返回的列表信息，构建一个结果
+    for(let i=0;i<data.length;i++){
+        let tmpTr = $('<tr>');
+        tmpTr.append($('<td>'+(i+1)+'</td>'));
+        tmpTr.append($('<td>'+data[i]['dbObjName']+'</td>'));
+        tmpTr.append($('<td>'+data[i]['entityName']+'</td>'));
+        tmpTr.append($('<td>'+(data[i]['status']?statusBtn1:statusBtn2)+'</td>'));
+        if(data[i]['status']){
+            tmpTr.append($('<td></td>'));
+            tmpTr.append($('<td>'+btn1+btn2+'</td>'));
+        }else{
+            tmpTr.append($('<td>'+data[i]['statusInfo']+'</td>'));
+            tmpTr.append($('<td></td>'));
+        }
+        tmpTr.append($('<td>'+data[i]['filePath']+'</td>'));
+        tbody.append(tmpTr);
+    }
+}
+
+//打开实体类存放的文件夹
+async function openEntityDir(){
+    //开始处理（获取实体存放路径）
+    let entityDir = await ElectronAPI.getStaticParameter('MY_SOFTWARE_ENTITY_DIR');
+    await ElectronAPI.filePathOpen(entityDir);
+}
+
+//打开实体类文件
+async function openEntityFile(obj){
+    let entityPath = $(obj).parent().parent().find('td:last-child').text();
+    await ElectronAPI.filePathOpen(entityPath);
 }
