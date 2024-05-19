@@ -77,7 +77,7 @@ function MyIpc() {
         //执行命令
         try{
             //先获取jar的后台输出，然后对信息处理完毕，再返回
-            let jarMessage = execSync(myCommand, {timeout:5000}).toString();
+            let jarMessage = execSync(myCommand, {timeout:60000}).toString();
             if(jarMessage && jarMessage.indexOf('error:')==0){
                 result.status='error';
                 result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
