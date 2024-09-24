@@ -12,7 +12,7 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         // An URL to an ICO file to use as the application icon (displayed in Control Panel > Programs and Features).
-        iconUrl: 'file:///C:/Users/pangd/Pictures/app-icons/icon.ico',
+        iconUrl: 'file:///D:/mygit-repo/my-mickarea-tool/icons/app-icons/icon.ico',
         // The ICO file to use as the icon for the generated Setup.exe
         setupIcon: 'icons/app-icons/icon.ico'
       },
