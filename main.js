@@ -7,6 +7,7 @@ let mainWindow;
 let createMainWindow = () => {
     //主窗口
     mainWindow = new BrowserWindow({
+        icon: 'icons/app-icons/icon.png',
         width:1100,
         height:850,
         minWidth:1100, //添加最小高度和最小宽度

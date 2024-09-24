@@ -4,12 +4,18 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    icon: 'icons/app-icons/icon'
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        // An URL to an ICO file to use as the application icon (displayed in Control Panel > Programs and Features).
+        iconUrl: 'file:///C:/Users/pangd/Pictures/app-icons/icon.ico',
+        // The ICO file to use as the icon for the generated Setup.exe
+        setupIcon: 'icons/app-icons/icon.ico'
+      },
     },
     {
       name: '@electron-forge/maker-zip',
@@ -17,7 +23,11 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        options: {
+          icon: 'icons/app-icons/icon.png'
+        }
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
