@@ -18,7 +18,7 @@ html, body {
 }
 .panel-left{
     width: var(--panel-left-width);
-    background-color: var(--panel-left-navbar-bgcolor);
+    /*background-color: var(--panel-left-navbar-bgcolor);*/
 }
 .panel-right{
     width: 100%;
@@ -30,6 +30,9 @@ html, body {
     width: 100%;
     height: var(--title-bar-height);
     background-color: #f2f2f2;
+}
+.title-area .col-6{
+    padding-right: 0;
 }
 /*内容区样式*/
 .content-area{
@@ -58,7 +61,7 @@ html, body {
     width: var(--title-bar-height);
     height: var(--title-bar-height);
     background-image: url(../images/logo/logo.png);
-    background-size: 25px 25px;
+    background-size: 35px 35px;
     background-repeat: no-repeat;
     background-position: left;
 }
@@ -68,42 +71,54 @@ html, body {
     width: calc(100% - var(--title-bar-height) -30px);
     height: var(--title-bar-height);
     line-height: var(--title-bar-height);
+    font-size: 20px;
+    color: #1d1929;
 }
-.win-min, .win-max, .win-close, .win-left-toggle{
+.win-btn{
     width: var(--title-bar-height);
     height: var(--title-bar-height);
-    background-image: url(../images/windowBtns/min.png);
-    background-size: 25px 25px;
-    background-repeat: no-repeat;
-    background-position: center;
+    padding-left: 11px;
+    padding-top: 7px;
 }
-.win-min:hover, .win-max:hover, .win-close:hover, .win-left-toggle:hover{
-    background-color: #CCC;
+.win-btn:hover{
+    background-color: #e3e2e2;
     cursor: pointer;
 }
-.win-max{
-    background-image: url(../images/windowBtns/max.png);
-}
-.win-close{
-    background-image: url(../images/windowBtns/close.png);
-}
-.win-left-toggle{
-    background-image: url(../images/windowBtns/toggle.png);
+.win-btn-icon{
+    color: #1d1929;
+    font-size: 1.5em;
 }
 
-/* 左侧导航栏，选中处理 */
-.navbar-nav .active>.nav-link::after{
-    content: '';
-    background-size: 20px 20px;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url(../images/otherImgs/nav-checked.png);
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-left: 5px;
-    margin-top: 2px;
-    vertical-align: top;
+/*左侧 菜单栏 样式*/
+.myMenu{
+    padding-left: 10px;
+}
+.myMenu .active{
+    background-color: #e6ecff;
+    color: #003cff;
+}
+.menuItem{
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    color: #1d1929;
+    padding-left: 30px;
+    border-radius: 20px;
+}
+.menuItem:hover{
+    cursor: pointer;
+    background-color: #e6ecff;
+    color: #003cff;
+}
+.menuSplit{
+    margin: 0 auto;
+    border: 1px dashed #ccc;
+    width: 70%;
+}
+.icons{
+    margin-right: 10px;
 }
 
 /* 内容区域 iframe 的样式 */

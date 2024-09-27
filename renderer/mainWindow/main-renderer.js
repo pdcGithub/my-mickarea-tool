@@ -11,7 +11,7 @@ $(document).ready(()=>{
     $("div[behaviortype='toolbarBtn']").on('click', toolbarBtnClick);
     
     //绑定左侧导航菜单栏的点击处理
-    $('.nav-item').on('click', leftNavOnClick);
+    $('.menuItem').on('click', leftNavOnClick);
 
     //默认一开始，点击一下第一个菜单
     $("#entitygen").click();
@@ -63,7 +63,7 @@ function leftNavToggled(){
     if(isPanelLeftAnimationStop){
         if(leftWidth>0){
             //隐藏(左侧)，扩大右侧
-            $("#left nav").css('display','none');
+            $("#left .myMenu").css('display','none');
             $("#left").css('animation','panel-left-close 1s');
             $("#right").css('animation','panel-right-extend 1s');
             setTimeout(()=>{
@@ -77,7 +77,7 @@ function leftNavToggled(){
             $("#right").css('animation','panel-right-curtail 1s');
             setTimeout(()=>{
                 //因为动画需要运行 1秒，所以 等他运行完 再清空原有设置
-                $("#left nav").css('display','');
+                $("#left .myMenu").css('display','');
                 $("#left").css('width', '');
                 $("#right").css('paddingLeft', '');
             }, 900);
@@ -88,7 +88,7 @@ function leftNavToggled(){
 /* 关于左边菜单栏的绑定处理 */
 function leftNavOnClick(){
     //先移除 active 样式
-    $(".nav-item").removeClass('active');
+    $(".menuItem").removeClass('active');
     //再在点击的地方添加 active 样式
     $(this).addClass('active');
     //获取当前处理的id信息
