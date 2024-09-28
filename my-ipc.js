@@ -78,17 +78,28 @@ function MyIpc() {
         try{
             //先获取jar的后台输出，然后对信息处理完毕，再返回
             let jarMessage = execSync(myCommand, {timeout:60000}).toString();
-            if(jarMessage && jarMessage.indexOf('error:')==0){
-                result.status='error';
-                result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
-            }else if(jarMessage && jarMessage.indexOf('success:')==0){
+            //将返回的 json 字符串 转为 对象
+            let jarResult = JSON.parse(jarMessage);
+            // 打印 接收到的对象
+            mylogger.debug(jarResult);
+            let message = jarResult.encodeMessage;
+            //将Unicode字符串转换为可正常显示的内容
+            message = decodeURIComponent(message);
+            //
+            if(jarResult.status === 'success'){
+                //对于 请求成功的处理，可能返回消息，也可能返回数据字符串
                 result.status='ok';
-                result.info = jarMessage.substring(jarMessage.indexOf(':')+1);
-                if(result.info.indexOf('[')==0){
+                if(jarResult.oriMessage.indexOf('[')==0){
                     //如果有库表信息返回，则转换为 data
-                    result.data = JSON.parse(result.info);
+                    result.data = JSON.parse(jarResult.oriMessage);
                     result.info = "";
+                }else{
+                    //普通消息
+                    result.info = message;
                 }
+            }else if (jarResult.status === 'error' || jarResult.status === 'FAULT'){
+                result.status='error';
+                result.info=message;
             }else{
                 result.status='error';
                 result.info='执行异常，jar 包程序没有内容返回.';
@@ -233,6 +244,19 @@ function MyIpc() {
     this.openFilePath = function(path){
         return shell.openPath(path);
     };
+
+    //打开 Jar 的执行日志 文件夹
+    this.openJarExecLogDir = function(event, window){
+        let msg = '';
+        // 设置 Jar 文件执行的 日志文件夹 路径
+        let jarLogDir = path.resolve('./logs/');
+        //校验路径是否存在
+        if(fs.existsSync(jarLogDir)){
+            this.openFilePath(jarLogDir);
+        }else{
+            this.alert(event, 'Jar 执行异常的 日志文件夹 暂未生成，请操作后再查询日志。', window);
+        }
+    }
 
 };
 

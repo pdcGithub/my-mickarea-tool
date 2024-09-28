@@ -28,7 +28,7 @@ let createMainWindow = () => {
     
     //开发者工具
     //mainWindow.webContents.openDevTools()
-    
+
 }
 
 //关于进行间通讯的处理
@@ -46,6 +46,7 @@ function doIPC(){
     //关于文件选择的弹窗处理 进程间通讯
     ipcMain.handle('file:fileselect', (event, fileFilters)=>{return ipc.fileselect(event, fileFilters, mainWindow)})
     ipcMain.handle('file:openpath', (event, path)=>{return ipc.openFilePath(path)})
+    ipcMain.handle('file:openJarExecLogDir', (event)=>{return ipc.openJarExecLogDir(event, mainWindow)})
     //关于shell命令执行的处理 进程间通讯
     ipcMain.handle('shell:jar', (event, javaCommand, jarPath, jarArguments)=>{return ipc.execJar(event, javaCommand, jarPath, jarArguments)})
     //关于数据库链接配置的保存、读取处理 进程间通讯

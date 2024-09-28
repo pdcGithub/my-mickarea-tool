@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     showFileDialog:(fileFilters)=>ipcRenderer.invoke('file:fileselect', fileFilters),
     //这里暴露一个 文件路径打开的处理方法
     filePathOpen:(path)=>ipcRenderer.invoke('file:openpath', path),
+    openJarExecLogDir:()=>ipcRenderer.invoke('file:openJarExecLogDir'),
 
     //这里暴露一个 java 程序的调用方法
     execJar:(javaCommand, jarPath, jarArguments)=>ipcRenderer.invoke('shell:jar', javaCommand, jarPath, jarArguments),

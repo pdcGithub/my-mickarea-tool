@@ -69,6 +69,9 @@ const formObjMap1 = {
     clearCache:{id:'clearCache', title:'清空缓存', cssClass:'btn btn-info', type:'button'},
     pickConfig:{id:'pickConfig', title:'调取已有配置', cssClass:'btn btn-primary', type:'buttonGroup', typeInfo:[]},
 
+    openLogDir:{id:'openLogDir', title:'打开调用日志', cssClass:'btn btn-warning', type:'button'},
+    openJarLog:{id:'openJarLog', title:'打开Jar日志', cssClass:'btn btn-success', type:'button'},
+
     //操作按钮 2
     showDBObjects:{id:'showDBObjects', title:'选取库表、视图', cssClass:'btn btn-primary', type:'button'},
     genDBObjects:{id:'genDBObjects', title:'生成实体', cssClass:'btn btn-success', type:'button'}
@@ -82,7 +85,10 @@ const mybaseconfig = [
     [formObjMap1['dbUser'], formObjMap1['dbPasswd'], formObjMap1['isAutoCommit']],
     [formObjMap1['connTimeout'], formObjMap1['minThreadNum'], formObjMap1['maxThreadNum']],
     //按钮配置
-    [formObjMap1['saveConfig'], formObjMap1['testDB'], formObjMap1['testJava'], formObjMap1['clearConfig'], formObjMap1['clearCache'], formObjMap1['pickConfig']]
+    [formObjMap1['saveConfig'], formObjMap1['testDB'], formObjMap1['testJava'], 
+     formObjMap1['clearConfig'], formObjMap1['clearCache'], formObjMap1['pickConfig'], 
+     formObjMap1['openLogDir'], formObjMap1['openJarLog']
+    ]
 ];
 
 //设计一个对象，用于第二页填充处理
@@ -313,6 +319,10 @@ function actionBinding(){
     $('#testJava').on('click', testJavaAction);
     $('#clearConfig').on('click', clearConfigAction);
     $('#clearCache').on('click', clearCacheAction);
+
+    //增加打开日志文件夹的处理
+    $('#openLogDir').on('click', openLogDirAction);
+    $('#openJarLog').on('click', openJarLogAction);
 
     //绑定第2页按钮事件
     $("#showDBObjects").on('click', showDBObjectsAction);
@@ -567,6 +577,18 @@ async function clearCacheAction(){
             await ElectronAPI.showAlert('缓存中的配置文件已全部删除!');
         }
     }
+}
+
+//打开调用程序时的日志文件夹
+async function openLogDirAction(){
+    //开始处理（软件的日志文件存放位置）
+    let entityDir = await ElectronAPI.getStaticParameter('MY_SOFTWARE_LOG_DIR');
+    await ElectronAPI.filePathOpen(entityDir);
+}
+
+//打开 Jar 的调用日志 文件夹
+async function openJarLogAction(){
+    await ElectronAPI.openJarExecLogDir();
 }
 
 //=======================================================================
