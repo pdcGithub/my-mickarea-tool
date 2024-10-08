@@ -36,3 +36,8 @@ html, body {
 .my-modal-dialog{
     max-width: 750px !important;
 }
+
+/* 设置在线编辑器的 边框*/
+.CodeMirror {
+    border: 1px solid #ccc;
+}

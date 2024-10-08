@@ -9,6 +9,8 @@
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'"/>
     <!-- Bootstrap 的 CSS 文件 -->
     <link rel="stylesheet" href="../../thirdparty/bootstrap4/bootstrap.min.css" />
+    <!-- 网页编辑器的 样式 -->
+    <link rel="stylesheet" href="../../thirdparty/codemirror-5.65.17/lib/codemirror.css" />
     <!-- 本页面自己的 css 样式 -->
     <link rel="stylesheet" href="./myframes.css" />
     <!-- 网页标题 -->
@@ -85,6 +87,13 @@
     <!-- 引入 jQuery 的 js 文件和 bootstrap 的 js 文件 -->
     <script src="../../thirdparty/jQuery/jquery-3.7.1.min.js"></script>
     <script src="../../thirdparty/bootstrap4/bootstrap.bundle.min.js"></script>
+    <!-- 网页编辑器 的 js -->
+    <script src="../../thirdparty/codemirror-5.65.17/lib/codemirror.js"></script>
+    <script src="../../thirdparty/codemirror-5.65.17/mode/sql/sql.js"></script>
+    <script src="../../thirdparty/codemirror-5.65.17/addon/selection/active-line.js"></script>
+    <script src="../../thirdparty/codemirror-5.65.17/addon/edit/matchbrackets.js"></script>
+    <!-- 自己的一个编辑器处理工具 -->
+     <script src="../../myTools/my-webeditor.js"></script>
     <!-- 本页面自己的 js 处理 -->
     <script src="./entitygen.js"></script>
 </body>

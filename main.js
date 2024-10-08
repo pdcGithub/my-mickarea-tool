@@ -8,9 +8,9 @@ let createMainWindow = () => {
     //主窗口
     mainWindow = new BrowserWindow({
         icon: 'icons/app-icons/icon.png',
-        width:1100,
+        width:1150,
         height:850,
-        minWidth:1100, //添加最小高度和最小宽度
+        minWidth:1150, //添加最小高度和最小宽度
         minHeight:850,
         webPreferences:{
             //加载主窗口专属 preload 脚本

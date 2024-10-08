@@ -4,6 +4,9 @@ try{ ElectronAPI = window.parent.ElectronAPI}catch(e){ElectronAPI=undefined};
 // 判断是否在 app 中运行
 let isApp = ElectronAPI ? true : false;
 
+//在线编辑器的全局对象
+let MyEditor = undefined;
+
 // 当文档加载完毕，执行这个函数
 $(document).ready(()=>{
     
@@ -12,6 +15,9 @@ $(document).ready(()=>{
 
     //开始处理 第二页 表单生成
     genForm('nav-dbobject', myobjectconfig);
+
+    //表单生成后，开始处理在线编辑器的内容
+    genOnlineEditor();
 
     //开始插入配置信息
     genDropdownMenu('nav-baseconfig');
@@ -59,7 +65,7 @@ const formObjMap1 = {
     schema:{id:'schema', title:"数据库实例名", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
     schemaUser:{id:'schemaUser', title:"数据库对象所属用户", colWidth:"col-md-6", needValid:true, validReg:/^[0-9A-Za-z\_]+$/, invalidInfo:'数字或者字母的组合', type:'text', typeInfo:[]},
     sqlObjects:{id:'sqlObjects', title:"数据库对象", colWidth:"col-md-12", needValid:true, validReg:/^[\$\_a-zA-Z0-9]+(\,[\$\_a-zA-Z0-9]+)*$/, invalidInfo:'请选择数据库对象', type:'text', typeInfo:[]},
-    sqlText:{id:'sqlText', title:"要映射的Sql语句", colWidth:"col-md-12", needValid:true, validReg:/^(?!.*["])(?=.+)/, invalidInfo:'请填写sql语句', type:'textarea', rows:'6'},
+    sqlText:{id:'sqlText', title:"要映射的Sql语句", value:"/* 请输入数据库查询语句，比如：select * from my_table */", colWidth:"col-md-12", needValid:false, validReg:undefined, invalidInfo:'请填写sql语句', type:'textarea'},
     
     //操作按钮 1
     saveConfig:{id:'saveConfig', title:'保存配置', cssClass:'btn btn-primary', type:'button'},
@@ -73,8 +79,10 @@ const formObjMap1 = {
     openJarLog:{id:'openJarLog', title:'打开Jar日志', cssClass:'btn btn-success', type:'button'},
 
     //操作按钮 2
-    showDBObjects:{id:'showDBObjects', title:'选取库表、视图', cssClass:'btn btn-primary', type:'button'},
-    genDBObjects:{id:'genDBObjects', title:'生成实体', cssClass:'btn btn-success', type:'button'}
+    showDBObjects:{id:'showDBObjects', title:'选取库表、视图', cssClass:'btn btn-primary', type:'button', disabled:true},
+    genDBObjects:{id:'genDBObjects', title:'生成实体', cssClass:'btn btn-success', type:'button', disabled:true},
+    saveSqlScript:{id:'saveSqlScript', title:'保存SQL脚本', cssClass:'btn btn-info ', type:'button', disabled:true},
+    loadSqlScript:{id:'loadSqlScript', title:'加载SQL脚本', cssClass:'btn btn-warning', type:'button', disabled:true}
 };
 
 //设计一个对象，用于信息填充处理
@@ -99,7 +107,7 @@ const myobjectconfig = [
     [formObjMap1['sqlObjects']],
     [formObjMap1['sqlText']],
     //按钮
-    [formObjMap1['showDBObjects'], formObjMap1['genDBObjects']]
+    [formObjMap1['showDBObjects'], formObjMap1['genDBObjects'], formObjMap1['saveSqlScript'], formObjMap1['loadSqlScript']]
 ];
 
 //校验单个输入或者选择框的函数
@@ -227,7 +235,7 @@ function genForm(tabId, configObj){
             let tmpCol = ['button', 'buttonGroup'].includes(col.type) ? undefined : $('<div>');
             switch(col.type){
                 case 'button':
-                    tmpRow.append('<button id="'+col.id+'" type="button" class="'+col.cssClass+'">'+col.title+'</button>');
+                    tmpRow.append('<button id="'+col.id+'" type="button" class="'+col.cssClass+'" '+(col.disabled?'disabled="disabled"':'')+'>'+col.title+'</button>');
                     break;
                 case 'buttonGroup':
                     let group = $('<div class="btn-group">');
@@ -266,7 +274,7 @@ function genForm(tabId, configObj){
                     tmpCol.addClass('form-group '+col.colWidth);
                     tmpCol.append('<label>'+col.title+'</label>');
                     let autofocusTextarea = col.autofocus ? 'autofocus' : '';
-                    tmpCol.append('<textarea '+autofocusTextarea+' rows="'+(col.rows?col.rows:5)+'" class="form-control" id="'+col.id+'" autocomplete="off" placeholder="'+(!col.placeholder?'':col.placeholder)+'"/>');
+                    tmpCol.append('<textarea '+autofocusTextarea+' rows="'+(col.rows?col.rows:5)+'" class="form-control" id="'+col.id+'" autocomplete="off" placeholder="'+(!col.placeholder?'':col.placeholder)+'">'+(!col.value?'':col.value)+'</textarea>');
                     //添加异常信息显示区
                     tmpCol.append('<div class="invalid-feedback">'+col.invalidInfo+'</div>');
                     break;
@@ -292,22 +300,50 @@ function genForm(tabId, configObj){
 
 //这里用于在页面初始化后，加载全部配置文件信息
 async function genDropdownMenu(tabId){
-    //请求后台
-    let result = await ElectronAPI.getAllConfigId();
-    //根据反应的结果处理
-    if(result.status!='ok' && result.info){
-        await ElectronAPI.showAlert(result.info);
-    }else{
-        //开始处理插入
-        let idArray = result.data;
-        if(idArray && idArray.length>0){
-            let dropdownMenu = $('#'+tabId+' form .btn-group .dropdown-menu');
-            dropdownMenu.html('');
-            for(id of idArray){
-                dropdownMenu.append('<a class="dropdown-item" href="#" value="" id="'+id+'" onclick="readConfigAction(\''+id+'\')">'+id+'</a>');
+    if(isApp){
+        //请求后台
+        let result = await ElectronAPI.getAllConfigId();
+        //根据反应的结果处理
+        if(result.status!='ok' && result.info){
+            await ElectronAPI.showAlert(result.info);
+        }else{
+            //开始处理插入
+            let idArray = result.data;
+            if(idArray && idArray.length>0){
+                let dropdownMenu = $('#'+tabId+' form .btn-group .dropdown-menu');
+                dropdownMenu.html('');
+                for(id of idArray){
+                    dropdownMenu.append('<a class="dropdown-item" href="#" value="" id="'+id+'" onclick="readConfigAction(\''+id+'\')">'+id+'</a>');
+                }
             }
         }
+    }else{
+        console.log('genDropdownMenu 这是浏览器测试环境，不调用 ElectronAPI');
     }
+}
+
+//这里处理在线编辑器的生成
+function genOnlineEditor(){
+
+    // CodeMirror 在线编辑器 初始化
+    var myTextarea = document.getElementById(formObjMap1['sqlText'].id);
+    var editor = CodeMirror.fromTextArea(myTextarea, {
+        value: myTextarea.value,
+        lineNumbers: true,
+        styleActiveLine: true,
+        matchBrackets: true,
+        mode: 'sql',
+        lineNumberFormatter:function(lineno){
+            return lineno + ' >>';
+        }
+    });
+
+    //对全局变量 赋值
+    MyEditor = new MyWebEditor(editor);
+
+    //刷新一次文本框（估计页面有其它影响，不刷新的话，第一次出不来。）
+    //页面如果是直接显示编辑器，这个问题是不会出现的。
+    MyEditor.editor.refresh();
 }
 
 //事件绑定处理
@@ -327,6 +363,8 @@ function actionBinding(){
     //绑定第2页按钮事件
     $("#showDBObjects").on('click', showDBObjectsAction);
     $("#genDBObjects").on('click', genDBObjectsAction);
+    $("#saveSqlScript").on('click', saveSqlScriptAction);
+    $("#loadSqlScript").on('click', loadSqlScriptAction);
 
     //模态窗按钮事件绑定
     $("#modalSave").on('click', getCheckedObjFromModalBody);
@@ -362,22 +400,26 @@ function actionBinding(){
 
     //特殊的表单内容事件处理（比如，文件选择）
     $('#jvm').on('click', async (jqueryEvent)=>{
-        let result = await ElectronAPI.showFileDialog();
-        if(result.canceled){
-            $(jqueryEvent.currentTarget).val('').change();
-        }else{
-            $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+        if(isApp){
+            let result = await ElectronAPI.showFileDialog();
+            if(result.canceled){
+                $(jqueryEvent.currentTarget).val('').change();
+            }else{
+                $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+            }
         }
     });
     $('#jar').on('click', async (jqueryEvent)=>{
-        let fileFilters = [
-            { name:'jar 文件', extensions:['jar']}
-        ];
-        let result = await ElectronAPI.showFileDialog(fileFilters);
-        if(result.canceled){
-            $(jqueryEvent.currentTarget).val('').change();
-        }else{
-            $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+        if(isApp){
+            let fileFilters = [
+                { name:'jar 文件', extensions:['jar']}
+            ];
+            let result = await ElectronAPI.showFileDialog(fileFilters);
+            if(result.canceled){
+                $(jqueryEvent.currentTarget).val('').change();
+            }else{
+                $(jqueryEvent.currentTarget).val(result.filePaths[0]).change();
+            }
         }
     });
 
@@ -392,18 +434,27 @@ function actionBinding(){
                     collectFormValue('nav-dbobject', $(jqueryEvent.currentTarget).attr('name'));
                     //如果是 ‘对象 / Sql语句’选择框，则需要处理输入框disabled的问题
                     if($(jqueryEvent.currentTarget).attr('name')=='actionType'){
+                        //解锁生成按钮
+                        $("#genDBObjects").removeAttr('disabled');
+                        //以下按照选择来处理
                         if(formObjMap1.actionType.value=='object'){
+                            //如果选择的是按对象生成，解锁 数据库对象 输入框；库表、视图选择按钮
                             $("#sqlObjects").removeAttr('disabled');
                             $("#sqlObjects").val('').change();
-                            $("#sqlText").attr('disabled',true);
-                            $("#sqlText").val('').change();
-                            $("#showDBObjects").removeAttr("disabled");
+                            $("#showDBObjects").removeAttr('disabled');
+                            //锁定 SQL 语句输入框；保存、加载 SQL 语句按钮
+                            MyEditor.lockEditorAndSetString('/* 编辑框已锁定 */');
+                            $("#saveSqlScript").attr('disabled',true);
+                            $("#loadSqlScript").attr('disabled',true);
                         }else if(formObjMap1.actionType.value=='sql'){
-                            $("#sqlObjects").attr('disabled', true);
+                            //如果按SQL语句生成，解锁 SQL 语句输入框；保存、加载 SQL 语句按钮
+                            MyEditor.unlockEditor();
+                            $("#saveSqlScript").removeAttr('disabled');
+                            $("#loadSqlScript").removeAttr('disabled');
+                            //锁定 数据库对象 输入框；库表、视图选择按钮
+                            $("#sqlObjects").attr('disabled',true);
                             $("#sqlObjects").val('').change();
-                            $("#sqlText").removeAttr('disabled');
-                            $("#sqlText").val('').change();
-                            $("#showDBObjects").attr("disabled", true);
+                            $("#showDBObjects").attr('disabled',true);
                         }
                     }
                 });
@@ -617,7 +668,13 @@ async function showDBObjectsAction(){
             fillInModalBody('请稍后，数据加载中 ......');
             $('#myDBObjects').modal('show');
             //然后，调用jar执行处理
-            let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+            let result = new Object();
+            if(isApp){
+                result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+            }else{
+                result.status='error';
+                result.info='这是浏览器测试界面，仅能进行 UI 调整。';
+            }
             if(result.status=='ok' && result.data){
                 //获取到表和视图信息，则开始构建一个 选择界面
                 fillInModalBody(result.data);
@@ -628,7 +685,11 @@ async function showDBObjectsAction(){
             throw new Error('所需配置尚未填写完毕，请检查!');
         }
     }catch(error){
-        await ElectronAPI.showAlert(error.message);
+        if(isApp){
+            await ElectronAPI.showAlert(error.message);
+        }else{
+            alert(error.message);
+        }
     }
 }
 
@@ -638,7 +699,13 @@ async function genDBObjectsAction(){
         if(!validForm('nav-baseconfig')) throw new Error('第一页，数据库基础配置尚未填写完毕!');
         if(!validForm('nav-dbobject')) throw new Error('第二页，信息尚未填写完毕，请检查!');
         //开始处理（获取实体存放路径）
-        let entityDir = await ElectronAPI.getStaticParameter('MY_SOFTWARE_ENTITY_DIR');
+        let entityDir ;
+        if(isApp){
+            entityDir = await ElectronAPI.getStaticParameter('MY_SOFTWARE_ENTITY_DIR');
+        }else{
+            entityDir = '';
+        }
+        
         //开始收集参数
         let jarArguments = [];
         let jarArgumentsKeys = ['databaseType', 'poolName', 'jdbcDriver', 'jdbcUrl', 'dbUser', 
@@ -652,7 +719,8 @@ async function genDBObjectsAction(){
         if(formObjMap1['actionType'].value=='object'){
             jarArguments.push(formObjMap1['sqlObjects'].value.replace(/[\s\r\n]+/g,' ').trim());
         }else if(formObjMap1['actionType'].value=='sql'){
-            jarArguments.push(formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
+            //jarArguments.push(formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
+            console.log('测试：'+formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
         }
         //最后加上 实体存放路径
         jarArguments.push(entityDir);
@@ -663,16 +731,48 @@ async function genDBObjectsAction(){
         beforeGetDBResult('请稍后......');
         $("#nav-result-tab").click();
         //调用jar包执行
-        let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+        let result = new Object();
+        if(isApp){
+            result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
+        }else{
+            result.status='error';
+            result.info='这是浏览器测试界面，仅能进行 UI 调整。';
+        }
         if(result.status=='ok' && result.data){
             //按照表格，构建执行信息
             afterGetDBResult(result.data);
         }else{
-            await ElectronAPI.showAlert('执行失败，异常信息如下：'+result.info);
+            if(isApp){
+                await ElectronAPI.showAlert('执行失败，异常信息如下：'+result.info);
+            }else{
+                alert('执行失败，异常信息如下：'+result.info);
+            }
         }
     }catch(error){
-        await ElectronAPI.showAlert(error.message);
+        if(isApp){
+            await ElectronAPI.showAlert(error.message);
+        }else{
+            alert(error.message);
+        }
     }
+}
+
+//保存 SQL 脚本信息
+function saveSqlScriptAction(){
+    //先获取编辑器中的原始字符串
+    let sqlScript = (MyEditor.getOriText() || ' ').trim();
+    //
+    if(!sqlScript){
+        alert('当前编辑器，没有任何内容可保存，请检查。');
+        return ;
+    }
+    //保存信息
+    MyEditor.saveScriptStr();
+}
+
+//加载 SQL 脚本信息
+function loadSqlScriptAction(){
+    MyEditor.loadScriptstr();
 }
 
 //进行模态窗内容构建
