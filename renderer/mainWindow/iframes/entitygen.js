@@ -7,6 +7,9 @@ let isApp = ElectronAPI ? true : false;
 //在线编辑器的全局对象
 let MyEditor = undefined;
 
+//我自己的消息提示弹窗
+const Msg = new MyMessage(isApp, ElectronAPI);
+
 // 当文档加载完毕，执行这个函数
 $(document).ready(()=>{
     
@@ -107,7 +110,8 @@ const myobjectconfig = [
     [formObjMap1['sqlObjects']],
     [formObjMap1['sqlText']],
     //按钮
-    [formObjMap1['showDBObjects'], formObjMap1['genDBObjects'], formObjMap1['saveSqlScript'], formObjMap1['loadSqlScript']]
+    [formObjMap1['showDBObjects'], formObjMap1['genDBObjects'], formObjMap1['saveSqlScript'], 
+     formObjMap1['loadSqlScript']]
 ];
 
 //校验单个输入或者选择框的函数
@@ -305,7 +309,7 @@ async function genDropdownMenu(tabId){
         let result = await ElectronAPI.getAllConfigId();
         //根据反应的结果处理
         if(result.status!='ok' && result.info){
-            await ElectronAPI.showAlert(result.info);
+            await Msg.myAlert(result.info);
         }else{
             //开始处理插入
             let idArray = result.data;
@@ -486,7 +490,7 @@ async function saveConfigAction(){
         let result = await ElectronAPI.saveConfig(myConfigMap);
         if(result.status!='ok' && result.info){
             //如果后台返回异常信息，则显示
-            await ElectronAPI.showAlert(result.info);
+            await Msg.myAlert(result.info);
         }else{
             //将返回的配置文件名，插入按钮组
             let dropdownMenu = $('#nav-baseconfig form .btn-group .dropdown-menu');
@@ -503,10 +507,10 @@ async function saveConfigAction(){
             if(!hadSameName){
                 dropdownMenu.append('<a class="dropdown-item" href="#" value="" id="'+result.configFileName+'" onclick="readConfigAction(\''+result.configFileName+'\')">'+result.configFileName+'</a>');
             }
-            await ElectronAPI.showAlert('配置信息已保存成功，配置名['+result.configFileName+']已添加至"调取已有配置"按钮');
+            await Msg.myAlert('配置信息已保存成功，配置名['+result.configFileName+']已添加至"调取已有配置"按钮');
         }
     }else{
-        await ElectronAPI.showAlert('表单尚未填写完整，请检查。');
+        await Msg.myAlert('表单尚未填写完整，请检查。');
     }
 }
 
@@ -516,7 +520,7 @@ async function readConfigAction(configId){
     let result = await ElectronAPI.readConfig(configId);
     if(result.status!='ok' && result.info){
         //显示异常信息
-        await ElectronAPI.showAlert(result.info);
+        await Msg.myAlert(result.info);
     }else{
         //如果正常的话，就把返回的配置信息，填充到文本框和勾选框
         for(obj in result.data){
@@ -573,12 +577,12 @@ async function testDBAction(){
         let result = await ElectronAPI.execJar(jvmPath, jarPath, jarArguments);
         //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
         if(result.status=='ok'){
-            await ElectronAPI.showAlert('执行成功，'+result.info);
+            await Msg.myAlert('执行成功，'+result.info);
         }else{
-            await ElectronAPI.showAlert('执行失败，'+result.info);
+            await Msg.myAlert('执行失败，'+result.info);
         }
     }else{
-        await ElectronAPI.showAlert('表单尚未填写完毕，请检查...');
+        await Msg.myAlert('表单尚未填写完毕，请检查...');
     }
 }
 
@@ -596,36 +600,36 @@ async function testJavaAction(){
         let result = await ElectronAPI.execJar(jvmPath, jarPath);
         //根据返回的结果显示信息（不论是否成功，都会返回消息，因此直接展示后台的消息即可）
         if(result.status=='ok'){
-            await ElectronAPI.showAlert('执行成功，'+result.info);
+            await Msg.myAlert('执行成功，'+result.info);
         }else{
-            await ElectronAPI.showAlert('执行失败，'+result.info);
+            await Msg.myAlert('执行失败，'+result.info);
         }
     }else{
-        await ElectronAPI.showAlert('请先填写 Java 环境路径 和 Jar 包路径');
+        await Msg.myAlert('请先填写 Java 环境路径 和 Jar 包路径');
     }
 }
 
 //清空配置事件
 async function clearConfigAction(){
-    let choose = await ElectronAPI.showConfirm('确定清空当前配置信息吗?');
-    if(choose.response==0) window.location.reload();
+    let choose = await Msg.myConfirm('确定清空当前配置信息吗 ?');
+    if(choose) window.location.reload();
 }
 
 //清空缓存信息事件
 async function clearCacheAction(){
-    let choose = await ElectronAPI.showConfirm('确定要清空缓存信息吗？清空后，所有已保存的配置文件都将删除!');
-    if(choose.response==0){
+    let choose = await Msg.myConfirm('确定要清空缓存信息吗？清空后，所有已保存的配置文件都将删除!');
+    if(choose){
         //调取后台处理
         let result = await ElectronAPI.removeAllConfig();
         //根据返回的结果显示信息
         if(result.status!='ok' && result.info){
-            await ElectronAPI.showAlert(result.info);
+            await Msg.myAlert(result.info);
         }else{
             //删除位于'调取已有配置'按钮下的配置信息
             let dropdownMenu = $('#nav-baseconfig form .btn-group .dropdown-menu');
             dropdownMenu.html('');
             //弹出提示信息
-            await ElectronAPI.showAlert('缓存中的配置文件已全部删除!');
+            await Msg.myAlert('缓存中的配置文件已全部删除!');
         }
     }
 }
@@ -685,11 +689,7 @@ async function showDBObjectsAction(){
             throw new Error('所需配置尚未填写完毕，请检查!');
         }
     }catch(error){
-        if(isApp){
-            await ElectronAPI.showAlert(error.message);
-        }else{
-            alert(error.message);
-        }
+        await Msg.myAlert(error.message);
     }
 }
 
@@ -719,8 +719,19 @@ async function genDBObjectsAction(){
         if(formObjMap1['actionType'].value=='object'){
             jarArguments.push(formObjMap1['sqlObjects'].value.replace(/[\s\r\n]+/g,' ').trim());
         }else if(formObjMap1['actionType'].value=='sql'){
-            //jarArguments.push(formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
-            console.log('测试：'+formObjMap1['sqlText'].value.replace(/[\s\r\n]+/g,' ').trim());
+            
+            //因为 sql 语句编写 使用了 web编辑框，不是普通的 textarea，所以要额外的处理
+            let sqlStr = MyEditor.getText() ? MyEditor.getText().trim() : '';
+            if(sqlStr){
+                //传参，调用后台处理
+                jarArguments.push(sqlStr);
+            }else{
+                //提示，尚未书写可用语句
+                await Msg.myAlert('获取不到可用的 sql 语句字符串信息。');
+                //终止执行
+                return false;
+            }
+            
         }
         //最后加上 实体存放路径
         jarArguments.push(entityDir);
@@ -742,29 +753,21 @@ async function genDBObjectsAction(){
             //按照表格，构建执行信息
             afterGetDBResult(result.data);
         }else{
-            if(isApp){
-                await ElectronAPI.showAlert('执行失败，异常信息如下：'+result.info);
-            }else{
-                alert('执行失败，异常信息如下：'+result.info);
-            }
+            await Msg.myAlert('执行失败，异常信息如下：'+result.info);
         }
     }catch(error){
-        if(isApp){
-            await ElectronAPI.showAlert(error.message);
-        }else{
-            alert(error.message);
-        }
+        await Msg.myAlert(error.message);
     }
 }
 
 //保存 SQL 脚本信息
-function saveSqlScriptAction(){
+async function saveSqlScriptAction(){
     //先获取编辑器中的原始字符串
     let sqlScript = (MyEditor.getOriText() || ' ').trim();
     //
     if(!sqlScript){
-        alert('当前编辑器，没有任何内容可保存，请检查。');
-        return ;
+        await Msg.myAlert('当前编辑器，没有任何内容可保存，请检查。');
+        return false;
     }
     //保存信息
     MyEditor.saveScriptStr();
