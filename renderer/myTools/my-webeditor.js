@@ -1,6 +1,8 @@
 "use strict";
+
 /**
  * 这里是关于我的在线编辑器的一些处理（编辑器的插件为：codemirror-5.65.17）
+ * @param {object} editorObj codemirror 实例对象
  */
 function MyWebEditor(editorObj){
 
@@ -94,41 +96,41 @@ function MyWebEditor(editorObj){
     /**
      * 保存编辑器中的脚本
      */
-    this.saveScriptStr = function(){
-        let choose = confirm('如果保存脚本，则会覆盖原有保存的内容，确认保存？');
+    this.saveScriptStr = async function(){
+        let choose = await Msg.myConfirm('如果保存脚本，则会覆盖原有保存的内容，确认保存？');
         if(choose){
             let oriStr = this.getOriText();
             let size = this.getByteLengthOfStr(oriStr);
             if(size<0) {
-                alert('计算字符串长度出错，获取的内容异常');
+                await Msg.myAlert('计算字符串长度出错，获取的内容异常');
                 return false;
             }
             if(size===0){
-                alert('获取的内容为空，不执行内容保存操作');
+                await Msg.myAlert('获取的内容为空，不执行内容保存操作');
                 return false;
             }
             if(size>5000000){
-                alert('获取的内容长度超过5MB，无法保存');
+                await Msg.myAlert('获取的内容长度超过5MB，无法保存');
                 return false;
             }
             //开始执行保存
             window.localStorage.setItem('MySqlScript', oriStr);
-            alert('保存成功!');
+            await Msg.myAlert('保存成功!');
         }
     }
 
     /**
      * 加载已经保存的脚本
      */
-    this.loadScriptstr = function(){
-        let choose = confirm('如果加载已经存储的内容，可能会覆盖当前内容，确认加载？');
+    this.loadScriptstr = async function(){
+        let choose = await Msg.myConfirm('如果加载已经存储的内容，可能会覆盖当前内容，确认加载？');
         if(choose){
             //提取
             let str = window.localStorage.getItem('MySqlScript');
             if(typeof str ==="string"){
                 this.editor.setValue(str);
             }else{
-                alert('加载不到可用的字符串数据');
+                await Msg.myAlert('加载不到可用的字符串数据');
             }
         }
     }
