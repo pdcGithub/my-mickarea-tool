@@ -3,9 +3,9 @@ const os = require('node:os')
 const path = require('node:path')
 
 /**
- * 软件的主目录
+ * 软件的主目录（为了可以让不同版本的软件兼容，新版本的根目录加个后缀 -v2）
  */
-const MY_SOFTWARE_HOME_DIR = os.homedir + path.sep + 'my-mickarea-tool'
+const MY_SOFTWARE_HOME_DIR = os.homedir + path.sep + 'my-mickarea-tool-v2'
 
 /**
  * 软件的配置文件存放位置
