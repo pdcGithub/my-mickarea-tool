@@ -1,0 +1,86 @@
+<!--
+    @description 文件描述
+    @author Micheal Pang (Dongcan Pang)
+    @createDate 2025 年 09 月 01 日
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 必要的 meta 标签 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- 安全处理信息 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: ; object-src 'self'; upgrade-insecure-requests;">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: ; object-src 'self'; upgrade-insecure-requests;"/>
+    <!-- 本页面自己的 css 样式 -->
+    <link rel="stylesheet" href="mainFrame.css" />
+    <!-- 网页标题 -->
+    <title>mainFrame</title>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar shadow-sm bg-body-secondary py-0 drag-area">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="####">
+                <img src="../modules/myselfs/imgs/logo.png" alt="Logo" width="24" height="24" class="d-inline-block align-text-top">
+                月光下的火山石（通用工具）
+            </a>
+            <div id="topNavForm" class="drag-area-exclude">
+                <button id="toMenu" class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <button id="toMin" class="btn btn-outline-secondary btn-sm" type="button">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button id="toMax" class="btn btn-outline-secondary btn-sm" type="button">
+                    <i class="bi bi-fullscreen"></i>
+                </button>
+                <button id="toClose" class="btn btn-outline-secondary btn-sm" type="button">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">菜单</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <!--
+                    <div class="mb-2">
+                        这里是一个隐藏式的菜单，它默认是不显示的。作为一个用户，你可以点击它们，然后它会刷新页面，然后打开对应的新页面。
+                    </div>
+                    -->
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" data-bs-dismiss="offcanvas" id="baseConfig">
+                            <i class="bi bi-gear me-3"></i>基础配置
+                        </li>
+                        <li class="list-group-item" aria-current="true" data-bs-dismiss="offcanvas" id="javaBeanTools">
+                            <i class="bi bi-tools me-3"></i>Java 数据库实体类生成
+                        </li>
+                        <li class="list-group-item" data-bs-dismiss="offcanvas" id="javaFeatureTools">
+                            <i class="bi bi-wrench-adjustable-circle me-3"></i>Java 功能生成
+                        </li>
+                        <li class="list-group-item" data-bs-dismiss="offcanvas" id="imageTools">
+                            <i class="bi bi-image me-3"></i>图片缩放处理
+                        </li>
+                        <li class="list-group-item" data-bs-dismiss="offcanvas" id="encryptionTools">
+                            <i class="bi bi-pc-display-horizontal me-3"></i>字符串加密与数字签名
+                        </li>
+                        <li class="list-group-item" data-bs-dismiss="offcanvas" id="aboutUS">
+                            <i class="bi bi-patch-question me-3"></i>关于我们
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 右侧内容区 -->
+    <iframe id="fillInArea" src=""></iframe>
+    
+    <!-- 导入 bootstrap 5 的 js 处理 -->
+    <script src="../modules/thirdpartys/bootstrap-5.3.6/bootstrap.bundle.js"></script>
+    <!-- 本页面自己的 js 处理 -->
+    <script src="mainFrame.js" type="module"></script>
+</body>
+</html>

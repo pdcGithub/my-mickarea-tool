@@ -1,0 +1,53 @@
+@charset "UTF-8";
+/**
+ * @description 这里是关于 主窗口 的样式处理
+ * @author Micheal Pang (Dongcan Pang)
+ * @createDate 2025 年 09 月 01 日
+ **/
+
+/* ============================================ 导入初始化样式处理 */
+@import url('../modules/myselfs/css/init.css');
+
+/* ============================================ 本页面自己的处理 */
+
+/*高度铺满处理*/
+html, body {
+    height: 100%;
+}
+
+/*调整导航栏 navbar 的 brand 标题文字颜色*/
+.navbar-brand, .navbar-brand:hover{
+    color: var(--bs-gray-900);
+}
+
+/*调整 tabs 选中时的 文字颜色 */
+.nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+    color: var(--bs-gray-900);
+}
+.nav-link, .nav-link:hover, .nav-link:focus{
+    color: var(--bs-gray-700);
+}
+
+/*菜单的一些处理*/
+.offcanvas-body li {
+    cursor: pointer;
+}
+
+/* 窗口控制区的样式 */
+.drag-area{
+    -webkit-app-region: drag;
+    -webkit-user-select: none;
+    user-select:none;
+}
+.drag-area-exclude{
+    -webkit-app-region: no-drag;
+    -webkit-user-select: auto;
+    user-select:auto;
+}
+
+/* 内容区域 iframe 的样式 */
+#fillInArea{
+    border: 0;
+    width: 100%;
+    height: calc(100% - 46px);
+}

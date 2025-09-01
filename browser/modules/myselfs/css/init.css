@@ -1,0 +1,15 @@
+@charset "UTF-8";
+/**
+ * @description 这是一个项目内部的初始化 css 样式文件。它主要负责 通用的样式处理。这样具体页面 直接导入即可。
+ * @author Micheal Pang (Dongcan Pang)
+ * @createDate 2025 年 09 月 01 日
+ **/
+
+/* =============================================================== 导入 bootstrap 5 的样式 和 字体 */
+@import url('../../thirdpartys/bootstrap-5.3.6/bootstrap.css');
+@import url('../../thirdpartys/bootstrap-5.3.6/bootstrap-icons.css');
+
+/* ===================================  自定义的通用样式处理 ==================== 调整默认的文字颜色 */
+body{
+    color: var(--bs-gray-900);
+}
