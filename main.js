@@ -21,13 +21,13 @@ let createMainWindow = () => {
     })
 
     //主窗口加载页面
-    mainWindow.loadFile('renderer/mainWindow/main.html')
+    mainWindow.loadFile('browser/pages/mainFrame.html');
 
     //窗口最大化（方便调试）
-    mainWindow.maximize();
+    //mainWindow.maximize();
     
     //开发者工具
-    //mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 
 }
 
