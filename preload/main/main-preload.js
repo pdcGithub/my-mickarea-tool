@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     getElectronVersion:()=>process.versions.electron,
     //关于本软件的版本号
     getAppVersion:()=>ipcRenderer.invoke('base:appversion'),
+    // 关于操作系统的信息
+    getOsVersionInfo:()=>ipcRenderer.invoke('base:osInfo'),
+    // 关于 Java 的信息
+    getJavaVersionInfo:()=>ipcRenderer.invoke('base:javaInfo'),
     //关于本软件的一些静态参数信息
     getStaticParameter:(name)=>ipcRenderer.invoke('base:staticparameter', name),
     

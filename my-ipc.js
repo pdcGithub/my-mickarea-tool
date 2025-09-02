@@ -6,6 +6,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { mylogger } =  require('./my-log')
 const { myParams } = require('./static-parameters')
+const iconv = require('iconv-lite')
 
 //主进程 ipc 相关处理
 function MyIpc() {
@@ -258,8 +259,68 @@ function MyIpc() {
         }
     }
 
+    /**
+     * 获取当前操作系统的一些信息，用于显示到介绍页面
+     * @param {*} event 这是 Electron 的 IPC 事件对象，一般用不上。
+     * @returns 一个信息对象字面量
+     */
+    this.getOsVersionInfo = function(event) {
+        // 定义一个对象字面量，用于返回
+        let osInfo = {
+            version:os.version(),
+            platform:os.platform(),
+            type:os.type(),
+            release:os.release(),
+            machine:os.machine()
+        }
+        // 
+        //console.log(new Date(), osInfo);
+        // 返回
+        return osInfo;
+    }
+
+    /**
+     * 获取当前安装的 Java 语言环境信息，用于显示到介绍页面
+     * @param {*} event 这是 Electron 的 IPC 事件对象，一般用不上。
+     */
+    this.getJavaVersionInfo = function(event) {
+        // 定义返回的结果
+        let result = {info1:'', info2:'', info3:''};
+        // 要执行的 命令 （这里 将 stderr 重定向到 stdout (2>&1)，并尝试获取输出）
+        let cmdstring1 = 'java -version 2>&1';
+        let timeout = 60000; // 60 秒
+        let encoding = 'buffer';
+        //打印命令
+        mylogger.debug('getJavaVersionInfo 开始获取 本地 Java 环境信息');
+        mylogger.debug('将要执行的命令为', cmdstring1);
+        try{
+            // 执行
+            let buffer = execSync(cmdstring1, {timeout:timeout, encoding:encoding});
+            // 如果是 简中的Windows系统，终端是 cp936 字符集，要转码。
+            let strResult = os.platform()==='win32'?iconv.decode(buffer, 'cp936'):buffer.toString();
+            let javaInfoArr = strResult.split(os.EOL).filter(str=>str.trim().length>0);
+            mylogger.debug('获得结果为以下信息');
+            mylogger.debug(strResult);
+            // 赋值
+            result.info1 = javaInfoArr[0];
+            result.info2 = javaInfoArr[1];
+            result.info3 = javaInfoArr[2];
+        }catch(error){
+            result.info1 = '本地 Java 环境变量尚未配置，请检查。';
+            result.info2 = '检测命令为: java -version';
+            result.info3 = '请检查本地设置';
+            mylogger.error(`调用的命令出错 ( ${cmdstring1} )。具体异常信息，已记录到日志中`);
+            // 因为把 stderr 重定向了，所以 异常处理要捕捉后，要获取 error.stdout 才能有信息
+            let buffer = error.stderr.length>0?error.stderr:error.stdout;
+            // 如果是 简中的Windows系统，终端是 cp936 字符集，要转码。
+            let errMessage = os.platform()==='win32'? iconv.decode(buffer, 'cp936') : buffer.toString();
+            mylogger.error(errMessage);
+        }
+        //
+        return result;
+    }
+
 };
 
 //导出模块
 module.exports = MyIpc;
-

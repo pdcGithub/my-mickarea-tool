@@ -38,6 +38,8 @@ function doIPC(){
     //关于窗口操作的 进程间通讯
     ipcMain.handle('winbtn:behavior', (event, behavior)=>{return ipc.windowBtnBehavior(event, behavior, mainWindow);})
     //关于一些基础信息的 进程间通讯
+    ipcMain.handle('base:osInfo', (event)=>{return ipc.getOsVersionInfo(event)});
+    ipcMain.handle('base:javaInfo', (event)=>{return ipc.getJavaVersionInfo(event)});
     ipcMain.handle('base:appversion', (event)=>{return app.getVersion()})
     ipcMain.handle('base:staticparameter', (event, name)=>{return ipc.getStaticParam(name)})
     //关于消息弹窗的处理 进程间通讯
