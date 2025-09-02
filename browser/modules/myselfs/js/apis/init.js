@@ -23,6 +23,12 @@
  */
 import { ValidUtil as vu } from "../../../../utils/valid.js";
 import { DataUtil as du } from "../../../../utils/datatype.js";
+import { Bs5EffLoading } from "../bootstrap5Effect.js";
+
+/**
+ * 定义一个加载动画组件常量
+ */
+const MY_LOADING = new Bs5EffLoading('myOwnLoading');
 
 /**
  * 模仿 JQuery 的 ready 方法的处理
@@ -40,6 +46,16 @@ function documentReady(callback) {
         //console.log("这里是回调执行");
         document.addEventListener('DOMContentLoaded', callback);
     }
+}
+
+/**
+ * 加载动画的事件绑定。在页面初始化时，调用本函数绑定 事件 'pdc.cmd.running' 和 'pdc.cmd.done'。
+ * 当具体页面需要调用加载动画时，使用 document 对象传递具体事件即可。
+ */
+function loadingInit(){
+    // 注册加载事件 与 动画处理绑定
+    actionBinding(document, 'pdc.cmd.running', event=>MY_LOADING.show());
+    actionBinding(document, 'pdc.cmd.done', event=>MY_LOADING.hide());
 }
 
 /**
@@ -133,6 +149,7 @@ function actionBindingBySelector(selector, eventTypeString, actionFunction) {
 }
 
 // 导出可以公用的部分
-export { documentReady }
+export { MY_LOADING }
+export { documentReady, loadingInit }
 export { htmlElementListToArray }
 export { actionBinding, actionBindingBySelector }

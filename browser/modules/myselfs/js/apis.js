@@ -18,7 +18,7 @@
  * 导入 apis 模块的 子模块
  */
 import { myapi } from "./apis/electronapi.js";
-import { documentReady, htmlElementListToArray, actionBinding, actionBindingBySelector } from "./apis/init.js";
+import { MY_LOADING, documentReady, loadingInit, htmlElementListToArray, actionBinding, actionBindingBySelector } from "./apis/init.js";
 
 /**
  * 导出公用部分：自定义 api 对象
@@ -31,5 +31,12 @@ export {
  * 导出公用部分：自定义 函数
  */
 export {
-    documentReady, htmlElementListToArray, actionBinding, actionBindingBySelector
+    documentReady, loadingInit, htmlElementListToArray, actionBinding, actionBindingBySelector
+}
+
+/**
+ * 导出公用部分：常量
+ */
+export {
+    MY_LOADING
 }

@@ -19,9 +19,14 @@
 "use strict"; // 这是严格模式下的 Javascript 代码
 
 /**
+ * 这里获取 进程间通信需要用到的 API 对象。由于有些页面在 iframe 里面，所以需要用 parent 来获取
+ */
+const MY_ELEC_API = window.ElectronAPI || window.parent.ElectronAPI;
+
+/**
  * 这里判断，到底是在 浏览器环境，还是 Electron 环境。
  */
-const IS_IN_APP = window.ElectronAPI ? true : false;
+const IS_IN_APP = MY_ELEC_API ? true : false;
 
 /**
  * 这是一个模拟消息的消息头
@@ -43,7 +48,7 @@ class ElectronAPI {
      */
     getNodeJsVersion() {
         if(this.isInApp){
-            return window.ElectronAPI.getNodeJsVersion();
+            return MY_ELEC_API.getNodeJsVersion();
         }else{
             //浏览器模拟的结果
             return `${TITLE} 模拟的 NodeJs 版本号为 0.0.0`;
@@ -56,7 +61,7 @@ class ElectronAPI {
      */
     getChromeVersion() {
         if(this.isInApp){
-            return window.ElectronAPI.getChromeVersion();
+            return MY_ELEC_API.getChromeVersion();
         }else{
             //浏览器模拟的结果
             return `${TITLE} 模拟的 Chrome 版本号为 1.1.1`;
@@ -69,7 +74,7 @@ class ElectronAPI {
      */
     getElectronVersion() {
         if(this.isInApp){
-            return window.ElectronAPI.getElectronVersion();
+            return MY_ELEC_API.getElectronVersion();
         }else{
             //浏览器模拟的结果
             return `${TITLE} 模拟的 Electron 版本号为 2.2.2`;
@@ -83,10 +88,42 @@ class ElectronAPI {
     async getAppVersion() {
         if(this.isInApp){
             // 对于 ElectronAPI 这个 getAppVersion 方法是异步的。返回一个 Promise 对象
-            return await window.ElectronAPI.getAppVersion();
+            return await MY_ELEC_API.getAppVersion();
         }else{
             //浏览器模拟的结果
             return Promise.resolve(`${TITLE} 模拟的 应用版本为 3.3.3`);
+        }
+    }
+
+    /**
+     * 关于当前操作系统的一些信息
+     * @returns {Promise<object>} 返回一个 Promise 对象，他的值是 关于当前操作系统的一些信息 的一个 对象字面量
+     */
+    async getOsVersionInfo() {
+        if(this.isInApp){
+            // 对于 ElectronAPI 这个 getOsVersionInfo 方法是异步的。返回一个 Promise 对象
+            return await MY_ELEC_API.getOsVersionInfo();
+        }else{
+            return Promise.resolve({
+                version : '[浏览器模拟] version',
+                platform : '[浏览器模拟] platform',
+                type : '[浏览器模拟] type',
+                release : '[浏览器模拟] release',
+                machine : '[浏览器模拟] machine'
+            });
+        }
+    }
+
+    /**
+     * 关于当前 Java语言环境 的一些信息
+     * @returns {Promise<object>} 返回一个 Promise 对象，他的值是 关于当前 Java语言环境 的一些信息 的一个 对象字面量
+     */
+    async getJavaVersionInfo() {
+        if(this.isInApp){
+            // 对于 ElectronAPI 这个 getJavaVersionInfo 方法是异步的。返回一个 Promise 对象
+            return await MY_ELEC_API.getJavaVersionInfo();
+        }else{
+            return Promise.resolve({info1:'[浏览器模拟] info 1', info2:'[浏览器模拟] info 2', info3:'[浏览器模拟] info 3'});
         }
     }
 
@@ -97,7 +134,7 @@ class ElectronAPI {
      */
     async getStaticParameter(name) {
         if(this.isInApp){
-            return await window.ElectronAPI.getStaticParameter(name);
+            return await MY_ELEC_API.getStaticParameter(name);
         }else{
             //浏览器模拟的结果
             return Promise.resolve(`${TITLE} 模拟的 静态参数 1.`);
@@ -111,7 +148,7 @@ class ElectronAPI {
      */
     async setWindowBehavior(behavior) {
         if(this.isInApp){
-            return await window.ElectronAPI.setWindowBehavior(behavior);
+            return await MY_ELEC_API.setWindowBehavior(behavior);
         }else{
             //浏览器模拟的结果
             return Promise.resolve({status:true, info:''});
@@ -125,7 +162,7 @@ class ElectronAPI {
      */
     async showAlert(message) {
         if(this.isInApp){
-            return await window.ElectronAPI.showAlert(message);
+            return await MY_ELEC_API.showAlert(message);
         }else{
             //浏览器模拟的结果
             return Promise.resolve(window.alert(message));
@@ -140,7 +177,7 @@ class ElectronAPI {
     async showConfirm(message) {
         if(this.isInApp){
             // Electron 返回的不是 true 和 false ，而是一个 Promise 对象，它的内容有 按钮的数字序列信息
-            let messageBoxResult = await window.ElectronAPI.showConfirm(message);
+            let messageBoxResult = await MY_ELEC_API.showConfirm(message);
             // 根据返回的数字，转换为一个 布尔类型的值
             let isOk = true;
             if(messageBoxResult.response==1 || messageBoxResult.response==-1) isOk=false;
@@ -159,7 +196,7 @@ class ElectronAPI {
     async showFileDialog(fileFilters) {
         if(this.isInApp){
             // 调用时，返回的是 一个 Promise ，内容是 Electron.OpenDialogReturnValue 类型的对象
-            let result = await window.ElectronAPI.showFileDialog(fileFilters);
+            let result = await MY_ELEC_API.showFileDialog(fileFilters);
             let re = "";
             if(!result.canceled){
                 //按了确定
@@ -181,7 +218,7 @@ class ElectronAPI {
     async filePathOpen(path) {
         if(this.isInApp){
             // Electron 返回的是一个 Promise ，并且如果没有异常，它的值是 空字符串 ""；有异常则返回异常信息
-            return await window.ElectronAPI.filePathOpen(path);
+            return await MY_ELEC_API.filePathOpen(path);
         }else{
             //浏览器模拟的结果
             console.log(`${TITLE} 打开一个文件路径 '${path}'`);
@@ -197,7 +234,7 @@ class ElectronAPI {
     async openJarExecLogDir() {
         if (this.isInApp) {
             // Electron 返回的是一个 Promise ，并且如果没有异常，它的值是 空字符串 ""；有异常则返回异常信息
-            return await window.ElectronAPI.openJarExecLogDir();
+            return await MY_ELEC_API.openJarExecLogDir();
         } else {
             //浏览器模拟的结果
             console.log(`${TITLE} 打开 jar 执行日志文件夹的路径`);
@@ -216,7 +253,7 @@ class ElectronAPI {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:'', data:undefined}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。如果有数据传送，则处理 data 。data 为 Json 对象
-            return await window.ElectronAPI.execJar(javaCommand, jarPath, jarArguments);
+            return await MY_ELEC_API.execJar(javaCommand, jarPath, jarArguments);
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`, data:undefined});
@@ -232,7 +269,7 @@ class ElectronAPI {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:'', configFileName:''}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。configFileName 为文件保存后的名字
-            return await window.ElectronAPI.saveConfig(dbConfig);
+            return await MY_ELEC_API.saveConfig(dbConfig);
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`, configFileName:'test.properties'})
@@ -248,7 +285,7 @@ class ElectronAPI {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:'', data:{}}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。data 为文件读出来的键值对，所生成的一个 js 对象。
-            return await window.ElectronAPI.readConfig(configName);
+            return await MY_ELEC_API.readConfig(configName);
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`, data:{id:1, name:"tom"}})
@@ -263,7 +300,7 @@ class ElectronAPI {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:'', data:[]}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。data 为配置文件名 数组 。
-            return await window.ElectronAPI.getAllConfigId();
+            return await MY_ELEC_API.getAllConfigId();
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`, data:['file1.properties','file2.properties']});
@@ -278,7 +315,7 @@ class ElectronAPI {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:''}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。
-            return await window.ElectronAPI.removeAllConfig();
+            return await MY_ELEC_API.removeAllConfig();
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`});
