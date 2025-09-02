@@ -14,24 +14,47 @@
  */
 "use strict"; // 这是严格模式下的 Javascript 代码
 
-import { documentReady, actionBinding, myapi } from "../../modules/myselfs/js/apis.js";
-import { Bs5EffLoading } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
-
-/**
- * 定义一个加载动画，通过事件来操控
- */
-const loading = new Bs5EffLoading('myLoading');
 
 documentReady(()=>{
 
-    // 注册加载事件 与 动画处理绑定
-    actionBinding(document, 'pdc.cmd.running', event=>loading.show());
-    actionBinding(document, 'pdc.cmd.done', event=>loading.hide());
+    // 加载动画初始化
+    loadingInit();
 
-    // 加载动画处理 开始
+    // 开始加载
     document.dispatchEvent(pdcCmdRunning);
-    // 加载动画处理 5 秒后 结束
-    setTimeout(event=>{ document.dispatchEvent(pdcCmdDone) }, 5000);
 
+    // 处理描述信息
+    description();
+
+    // 结束加载
+    document.dispatchEvent(pdcCmdDone);
 });
+
+/**
+ * 获取一些描述信息，并写入页面中
+ */
+async function description(){
+
+    // 当前时间
+    let date = new Date();
+    
+    // 获取一些基础信息
+    let copyright = `欢迎使用 mickarea.net 出品。版权所有 Copyright © 2024 - ${date.getFullYear()} mickarea.net All rights reserved.`;
+    let chromeinfo = myapi.getChromeVersion();
+    let electroninfo = myapi.getElectronVersion();
+    let nodejsinfo = myapi.getNodeJsVersion();
+    let appversionInfo = await myapi.getAppVersion();
+    let osVersionInfo = await myapi.getOsVersionInfo();
+    let javaVersionInfo = await myapi.getJavaVersionInfo();
+
+    // 设置信息到页面上
+    document.querySelector('#copyrightInfo').innerHTML = copyright;
+    document.querySelector('#chromeinfo').innerHTML = chromeinfo;
+    document.querySelector('#electroninfo').innerHTML = electroninfo;
+    document.querySelector('#nodejsinfo').innerHTML = nodejsinfo;
+    document.querySelector('#myAppVersion').innerHTML = appversionInfo;
+    document.querySelector('#osVersion').innerHTML = `${osVersionInfo.version} (${osVersionInfo.release} ${osVersionInfo.machine})`;
+    document.querySelector('#javaVersion').innerHTML = `${javaVersionInfo.info1} &lt;${javaVersionInfo.info2}&gt;`;
+}

@@ -19,7 +19,20 @@
 </head>
 <body>
     <!-- 从这里开始编码 -->
-    测试一下 about us.
+    <div class="container-fluid pt-3">
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">关于我们</h4>
+            <p id="copyrightInfo"></p>
+            <hr>
+            <p>软件信息如下：</p>
+            <p>Chromium 版本信息: <span id="chromeinfo"></span></p>
+            <p>Electron 版本信息: <span id="electroninfo"></span></p>
+            <p>NodeJs 版本信息: <span id="nodejsinfo"></span></p>
+            <p>当前软件版本: <span id="myAppVersion"></span></p>
+            <p>操作系统信息：<span id="osVersion"></span></p>
+            <p>Java 信息：<span id="javaVersion"></span></p>
+        </div>
+    </div>
 
     <script src="../../modules/thirdpartys/bootstrap-5.3.6/bootstrap.bundle.js"></script>
     <!-- 本页面自己的 js 处理 -->
