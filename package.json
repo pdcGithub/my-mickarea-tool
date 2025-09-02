@@ -21,6 +21,7 @@
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
     "electron": "^30.0.2",
+    "iconv-lite": "^0.7.0",
     "log4js": "^6.9.1"
   },
   "dependencies": {
