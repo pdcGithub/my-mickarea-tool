@@ -120,7 +120,7 @@ function MyIpc() {
     };
 
     //保存配置 
-    this.saveConfig = function(event, dbConfig){
+    this.saveConfig = function(event, myOwnConfig){
         //定义一个返回的结果对象
         let result = {status:'ok', info:'', configFileName:''};
         try{
@@ -128,36 +128,37 @@ function MyIpc() {
             if(!fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 fs.mkdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
             }
-            //校验传来参数是否完整
-            let isOk = true;
-            let errObj = undefined;
-            for(obj in dbConfig){
-                if(!dbConfig[obj]) {
-                    isOk=false;
-                    errObj=obj+'';
-                    break;
-                }
-            }
-            if(!isOk){
-                throw new Error('传来的参数['+errObj+']没有填写完整，请检查!');
-            }else{
-                //构造文件名
-                let fileName = dbConfig['poolName']+'.properties';
-                let filePath = myParams.MY_SOFTWARE_CONFIG_DIR + path.sep + fileName;
-                //删除同名文件
-                fs.rmSync(filePath, {force:true});
-                //循环遍历对象内容，以追加形式插入信息
-                for(obj in dbConfig){
-                    let tmpData = obj + '=' + dbConfig[obj] + os.EOL;
-                    fs.writeFileSync(filePath, tmpData, {flag:'a+'});
-                }
-                //返回结果
-                result.configFileName = fileName;
-            }
+            if(typeof myOwnConfig !== 'object' || Array.isArray(myOwnConfig)) throw Error(`传来的配置对象 ${myOwnConfig} 不是一个有效的配置对象`);
+            
+            let keys = Object.keys(myOwnConfig);
+            let newKeys = keys.filter(key=>typeof myOwnConfig[key]==='string'); // 只要字符串类型的键值对
+
+            if(newKeys.length<=0) throw Error(`经过校验，当前传入的参数 ${myOwnConfig} 没有符合的键值对可用于存储。`);
+            if(!newKeys.includes('filename')) throw Error('经过校验，当前传入的参数中，没有 filename 键值对，无法执行保存');
+            
+            //构造文件名
+            let fileName = myOwnConfig['filename'];
+            let filePath = myParams.MY_SOFTWARE_CONFIG_DIR + path.sep + fileName;
+
+            //删除同名文件
+            fs.rmSync(filePath, {force:true});
+            // 写入
+            newKeys.forEach(key=>{
+                let tmpData = key.trim() + '=' + myOwnConfig[key].trim() + os.EOL;
+                fs.writeFileSync(filePath, tmpData, {flag:'a+'});
+            });
+            
+            //返回结果
+            result.info = `配置 ${fileName} 保存成功`;
+            result.configFileName = filePath;
+            
+            mylogger.debug(result);
+
         }catch(error){
             result.status='error';
             result.info=error.message;
             result.configFileName='';
+            mylogger.error(error);
         }
         return result;
     };
@@ -173,21 +174,23 @@ function MyIpc() {
             if(typeof configName !== 'string' || !fileRegexp.test(configName)) throw new Error('传来的配置文件名['+configName+']异常，请检查!');
             if(!fs.existsSync(filePath)) throw new Error('本地文件['+filePath+']不存在');
             //读取文件
-            let bufResult = fs.readFileSync(filePath).toString();
-            if(!bufResult) throw new Error('本地文件['+filePath+']内容为空');
-            //解析文件
+            let bufResult = fs.readFileSync(filePath).toString().trim();
+            if(bufResult.length<=0) throw new Error('本地文件['+filePath+']内容为空');
+            // 解析文件
             let rows = bufResult.split(os.EOL);
-            for(kv of rows){
-                if(kv.length<=0) continue;
-                let eqIndex= kv.indexOf('=');
-                let key = kv.substring(0, eqIndex);
-                let value = kv.substring(eqIndex+1);
+            rows.filter(row=>row.trim().length>0 && row.trim().includes('=')).map(row=>row.trim()).forEach(row=>{
+                let eqIndex= row.indexOf('=');
+                let key = row.substring(0, eqIndex);
+                let value = row.substring(eqIndex+1);
                 result.data[key]=value;
-            }
-            //console.log(result.data);
+            })
+
+            result.info = '配置读取成功';
+            mylogger.debug(result);
         }catch(error){
             result.status='error';
             result.info=error.message;
+            mylogger.error(error);
         }
         return result;
     };
