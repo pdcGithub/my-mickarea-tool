@@ -24,11 +24,11 @@ let jvmPath = new Bs5EffFormInput('jvmPath',
     {
         labelInfo:'Java 语言环境路径', 
         helperInfo:'这里需要设置一个 Java 语言环境的路径。如果是 Windows 系统，它通常是 java.exe 文件的路径',
-        invalidInfo:'这个路径不能为空，请务必填写'
+        invalidInfo:'这个路径不能为空，请务必填写。路径最好是纯粹的英文以及符号，最后必须是 java 或者 java.exe 结尾'
     },
     {
         type:'text', 
-        validRule:/[\S]+/,
+        validRule:/^[\s\S]+java(\.exe)?$/i, // 这里路径最后必须是 java 或者 java.exe 结尾。比较时忽略大小写
         customEvent:du.genMap('click', async event=>{
             // 点击时，打开 Electron 文件选择器
             let result = await myapi.showFileDialog();
@@ -41,11 +41,11 @@ let jarPath = new Bs5EffFormInput('jarPath',
     {
         labelInfo:'配套的 Jar 程序包路径', 
         helperInfo:'这里通常指的是 my-javabean-generator 项目，打包后的 jar 包路径',
-        invalidInfo:'这个路径不能为空，请务必填写'
+        invalidInfo:'这个路径不能为空，请务必填写。路径最好是纯粹的英文以及符号，最后必须是 .jar 结尾'
     },
     {
         type:'text', 
-        validRule:/[\S]+/,
+        validRule:/^[\s\S]+\.jar?$/i, // 这里路径最后必须是 .jar 结尾。比较时忽略大小写
         customEvent:du.genMap('click', async event=>{
             // 文件过滤器 jar 
             let fileFilters = [
@@ -96,8 +96,9 @@ function buildForm(){
     let btnLoad = new Bs5EffButton('btnLoad', {name:'加载配置', cssClass:'me-1', click:event=>loadConfig()});
     let btnSave = new Bs5EffButton('btnSave', {name:'保存配置', color:BTN_COR.info ,cssClass:'me-1', click:event=>saveConfig()});
     let btnRefresh = new Bs5EffButton('btnRefresh', {name:'刷新页面', color:BTN_COR.success, cssClass:'me-1', click:event=>refreshPage()});
+    let btnTestJar = new Bs5EffButton('btnTestJar', {name:'测试 Jar 包', color:BTN_COR.warning, cssClass:'me-1', click:event=>testJar()});
     let row3 = new Bs5EffRow('row3', {cssClass:'mb-2', initChildren:[
-        new Bs5EffCol('row3col1', {cssClass:'', initChildren:[ btnLoad, btnSave, btnRefresh]})
+        new Bs5EffCol('row3col1', {cssClass:'', initChildren:[ btnLoad, btnSave, btnRefresh, btnTestJar]})
     ]});
     // 开始组装
     form1.addChildren(row1, row2, row3);
@@ -116,8 +117,8 @@ async function loadConfig(){
     
     // 根据状态判断
     if(result.status === 'ok'){
-        jvmPath.setValue(`${result.data.jvm}`);
-        jarPath.setValue(`${result.data.jar}`);
+        jvmPath.setValue(`${result.data.jvm || ''}`);
+        jarPath.setValue(`${result.data.jar || ''}`);
     }
 
     // 返回消息
@@ -154,4 +155,29 @@ async function saveConfig(){
 async function refreshPage(){
     let choose = await myapi.showConfirm('确定刷新当前页面吗? 如果尚未保存，则会丢失信息。');
     if(choose) window.location.reload();
+}
+
+/**
+ * 测试 Jar 包是否可以运行
+ */
+async function testJar(){
+    
+    // 先校验
+    if(!(jvmPath.valid() && jarPath.valid())){
+        new Bs5EffMessage('当前表单校验不通过，还有内容没有正确填写，请检查！').show();
+        return ;
+    }
+
+    // 获取执行参数
+    let jvm = jvmPath.getValue().trim();
+    let jar = jarPath.getValue().trim();
+    let jarArgs = ['-m', 'jar_test'];
+
+    // 执行
+    document.dispatchEvent(pdcCmdRunning)
+    let result = await myapi.execJar(jvm, jar, jarArgs);
+    document.dispatchEvent(pdcCmdDone);
+
+    // 结果处理
+    new Bs5EffMessage(`当前 Jar 程序包运行${result.status==='ok'?'成功':'失败，请检查日志文件'}，后台返回消息：${result.info}`).show();
 }
