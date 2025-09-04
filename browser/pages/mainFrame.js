@@ -15,6 +15,7 @@
 "use strict"; // 这是严格模式下的 Javascript 代码
 
 import { documentReady, actionBindingBySelector, myapi } from "../modules/myselfs/js/apis.js";
+import { Bs5EffMessage } from "../modules/myselfs/js/bootstrap5Effect.js";
 
 /**
  * 默认的选中菜单 ID
@@ -42,27 +43,38 @@ documentReady(()=>{
 function windowBtnsBinding(){
 
     // 开始绑定 点击 事件
-    actionBindingBySelector('#toMin, #toMax, #toClose', 'click', async (event) => {
+    actionBindingBySelector('#toMin, #toMax, #toClose, #toJarLog, #toAppLog', 'click', async (event) => {
         let idVal = event.currentTarget.id;
-        let promiseValue = {'val':'nothing...'};
+        let promiseValue = {status:true, info:''};
         switch(idVal){
+            case 'toAppLog':
+                // 打开 app 日志文件夹
+                promiseValue = await myapi.setWindowBehavior('appLog');
+                if(!promiseValue.status) new Bs5EffMessage(`打开 APP 日志文件夹失败，${promiseValue.info}`).show();
+                break;
+            case 'toJarLog':
+                // 打开 jar 日志文件夹
+                promiseValue = await myapi.setWindowBehavior('jarLog');
+                if(!promiseValue.status) new Bs5EffMessage(`打开 Jar 日志文件夹失败，${promiseValue.info}`).show();
+                break;
             case 'toMin':
                 promiseValue = await myapi.setWindowBehavior('min'); // 最小化
+                if(!promiseValue.status) new Bs5EffMessage(`执行窗口最小化失败，${promiseValue.info}`).show();
                 break;
             case 'toMax':
                 promiseValue = await myapi.setWindowBehavior('max'); // 最大化
+                if(!promiseValue.status) new Bs5EffMessage(`执行窗口最大化失败，${promiseValue.info}`).show();
                 break;
             case 'toClose':
                 // 先提示是否要关闭
                 let choose = await myapi.showConfirm('确定要关闭窗口吗？关闭后程序将退出执行。');
-                // console.log(new Date(), choose)
                 // 如果确定，则执行关闭处理
                 if(choose) promiseValue = await myapi.setWindowBehavior('close');// 关闭
+                if(!promiseValue.status) new Bs5EffMessage(`执行窗口关闭失败，${promiseValue.info}`).show();
                 break;
             default:
                 break;
         }
-        // console.log(new Date(), idVal, promiseValue);
     });
 }
 

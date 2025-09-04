@@ -29,11 +29,32 @@ function MyIpc() {
                 case 'close':
                     if(!window.isDestroyed()) window.close();
                     break;
+                case 'appLog':
+                    let appLogDirExists = fs.existsSync(myParams.MY_SOFTWARE_LOG_DIR);
+                    if(appLogDirExists){
+                        this.openFilePath(myParams.MY_SOFTWARE_LOG_DIR);
+                    }else{
+                        throw new Error(`本软件的执行日志文件夹[${myParams.MY_SOFTWARE_LOG_DIR}]尚未创建`);
+                    }
+                    break;
+                case 'jarLog':
+                    // 设置 Jar 文件执行的 日志文件夹 路径
+                    let jarLogDir = path.resolve('./logs/');
+                    //校验路径是否存在
+                    if(fs.existsSync(jarLogDir)){
+                        this.openFilePath(jarLogDir);
+                    }else{
+                        throw new Error(`Jar 执行异常的 日志文件夹 暂未生成，请操作后再查询日志。`);
+                    }
+                    break;
+                default:
+                    throw new Error(`获取的行为参数 ${behavior} 异常，没有可匹配的处理。`);
+                    break;
             }
-        }catch(e){
+        }catch(error){
             //如果主进程报错，则返回错误信息给 渲染进程
             result.status = false;
-            result.info = e;
+            result.info = error.message;
         }
         return result;
     };
@@ -128,13 +149,13 @@ function MyIpc() {
             if(!fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 fs.mkdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
             }
-            if(typeof myOwnConfig !== 'object' || Array.isArray(myOwnConfig)) throw Error(`传来的配置对象 ${myOwnConfig} 不是一个有效的配置对象`);
+            if(typeof myOwnConfig !== 'object' || Array.isArray(myOwnConfig)) throw new Error(`传来的配置对象 ${myOwnConfig} 不是一个有效的配置对象`);
             
             let keys = Object.keys(myOwnConfig);
             let newKeys = keys.filter(key=>typeof myOwnConfig[key]==='string'); // 只要字符串类型的键值对
 
-            if(newKeys.length<=0) throw Error(`经过校验，当前传入的参数 ${myOwnConfig} 没有符合的键值对可用于存储。`);
-            if(!newKeys.includes('filename')) throw Error('经过校验，当前传入的参数中，没有 filename 键值对，无法执行保存');
+            if(newKeys.length<=0) throw new Error(`经过校验，当前传入的参数 ${myOwnConfig} 没有符合的键值对可用于存储。`);
+            if(!newKeys.includes('filename')) throw new Error('经过校验，当前传入的参数中，没有 filename 键值对，无法执行保存');
             
             //构造文件名
             let fileName = myOwnConfig['filename'];
