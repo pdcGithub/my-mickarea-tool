@@ -7,6 +7,7 @@ const fs = require('node:fs')
 const { mylogger } =  require('./my-log')
 const { myParams } = require('./static-parameters')
 const iconv = require('iconv-lite')
+const { resourceUsage } = require('node:process')
 
 //主进程 ipc 相关处理
 function MyIpc() {
@@ -82,10 +83,19 @@ function MyIpc() {
         return dialog.showOpenDialog(window, {title:'请选择一个文件', filters:fileFilters});
     };
 
-    //jar 执行处理
+    /**
+     * 这是新的 jar 执行处理。以往的方式，中文乱码以及执行处理有些问题。这里重写一下试试
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {string} javaCommand java 虚拟机路径。一般是 java.exe 的完整路径
+     * @param {string} jarPath jar 程序包的路径。
+     * @param {Array<string>} jarArguments 一个命令参数数组，内部是字符串内容。
+     * @returns {object} 一个信息对象。比如：{status:'ok', info:'', data:undefined}
+     */
     this.execJar = function(event, javaCommand, jarPath, jarArguments){
+
         //定义一个返回的结果对象
         let result = {status:'ok', info:'', data:undefined};
+
         //构造命令
         let myCommand = '"'+javaCommand.replaceAll('"','\\"')+'" -jar "'+jarPath.replaceAll('"','\\"')+'" ';
         if(jarArguments && jarArguments.length>0){
@@ -93,50 +103,62 @@ function MyIpc() {
                 myCommand += ' "'+arg.replaceAll('"','\\"')+'" ';
             }
         }
+
         //打印命令
-        mylogger.debug('打印命令...');
+        mylogger.debug('execJar 打印命令...');
         mylogger.debug(myCommand);
-        //执行命令
+
+        // 开始执行
         try{
-            //先获取jar的后台输出，然后对信息处理完毕，再返回
-            let jarMessage = execSync(myCommand, {timeout:60000}).toString();
+            let timeout = 60000; // 60 秒
+            let encoding = 'buffer';
+
+            // 执行
+            let buffer = execSync(myCommand, {timeout:timeout, encoding:encoding});
+
+            // 如果是 简中的Windows系统，终端是 cp936 字符集，要转码。
+            let strResult = os.platform()==='win32'?iconv.decode(buffer, 'cp936'):buffer.toString();
+
             //将返回的 json 字符串 转为 对象
-            let jarResult = JSON.parse(jarMessage);
+            let jarResult = JSON.parse(strResult);
+
             // 打印 接收到的对象
+            mylogger.debug('执行 jar 完成，接收到结果如下：');
             mylogger.debug(jarResult);
-            let message = jarResult.encodeMessage;
-            //将Unicode字符串转换为可正常显示的内容
-            message = decodeURIComponent(message);
-            //
+
+            // 接收到的结果处理
             if(jarResult.status === 'success'){
                 //对于 请求成功的处理，可能返回消息，也可能返回数据字符串
                 result.status='ok';
                 if(jarResult.oriMessage.indexOf('[')==0){
                     //如果有库表信息返回，则转换为 data
                     result.data = JSON.parse(jarResult.oriMessage);
-                    result.info = "";
+                    result.info = "获取数据库数据成功";
                 }else{
                     //普通消息
-                    result.info = message;
+                    result.info = jarResult.oriMessage;
                 }
             }else if (jarResult.status === 'error' || jarResult.status === 'FAULT'){
                 result.status='error';
-                result.info=message;
+                result.info=jarResult.oriMessage;
             }else{
                 result.status='error';
-                result.info='执行异常，jar 包程序没有内容返回.';
+                result.info='执行异常, jar 包程序没有内容返回.';
             }
+
         }catch(error){
-            result.info=error.message;
-            if(result.info.indexOf('Command failed')>=0){
-                result.info = '调用的命令出错，请检查 jar 包是否可执行，以及 命令是否正确。具体异常信息，已记录到日志中。';
-            }
-            result.status='error';
-            mylogger.error('执行出错，异常信息如下：');
-            mylogger.error(error);
+            mylogger.error(`调用的命令出错 ( ${myCommand} )。具体异常信息，已记录到日志中`);
+            // 因为有些脚本把 stderr 重定向了，所以 异常处理要捕捉后，要获取 error.stdout 才能有信息
+            let buffer = error.stderr.length>0?error.stderr:error.stdout;
+            // 如果是 简中的Windows系统，终端是 cp936 字符集，要转码。
+            let errMessage = os.platform()==='win32'? iconv.decode(buffer, 'cp936') : buffer.toString();
+            mylogger.error(errMessage);
+            // 设置返回信息
+            result.status = 'error';
+            result.info = errMessage;
         }
-        mylogger.debug(result);
-        //返回结果
+
+        // 返回
         return result;
     };
 

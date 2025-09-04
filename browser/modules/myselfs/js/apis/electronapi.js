@@ -246,7 +246,7 @@ class ElectronAPI {
      * java 程序的调用方法。
      * @param {string} javaCommand Java 的 jvm 启动命令路径。一般为 java.exe 文件路径
      * @param {string} jarPath 要执行的 jar 包的文件路径
-     * @param {string} jarArguments 这个 jar 包的执行参数信息
+     * @param {Array<string>} jarArguments 这个 jar 包的执行参数信息
      * @returns {Promise<object>} 一个 Promise 对象，它的值是 {status:'ok', info:'', data:undefined}; 这种形式
      */
     async execJar(javaCommand, jarPath, jarArguments) {
