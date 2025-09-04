@@ -16,11 +16,11 @@
 
 import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
-import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffForm, Bs5EffFormInput, Bs5EffMessage, Bs5EffRow } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffForm, Bs5EffFormTextInput, Bs5EffMessage, Bs5EffRow } from "../../modules/myselfs/js/bootstrap5Effect.js";
 import { DataUtil as du } from "../../utils/datatype.js";
 import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
 
-let jvmPath = new Bs5EffFormInput('jvmPath', 
+let jvmPath = new Bs5EffFormTextInput('jvmPath', 
     {
         labelInfo:'Java 语言环境路径', 
         helperInfo:'这里需要设置一个 Java 语言环境的路径。如果是 Windows 系统，它通常是 java.exe 文件的路径',
@@ -37,7 +37,7 @@ let jvmPath = new Bs5EffFormInput('jvmPath',
         })
     }
 );
-let jarPath = new Bs5EffFormInput('jarPath', 
+let jarPath = new Bs5EffFormTextInput('jarPath', 
     {
         labelInfo:'配套的 Jar 程序包路径', 
         helperInfo:'这里通常指的是 my-javabean-generator 项目，打包后的 jar 包路径',
