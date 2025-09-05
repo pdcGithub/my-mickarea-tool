@@ -23,11 +23,17 @@ const MY_SOFTWARE_LOG_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'log'
 const MY_SOFTWARE_ENTITY_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'entities'
 
 /**
+ * Java 功能生成后的目录
+ */
+const MY_SOFTWARE_FEATURE_DIR = MY_SOFTWARE_HOME_DIR + path.sep + 'feature'
+
+/**
  * 导出常量
  */
 exports.myParams = {
     MY_SOFTWARE_HOME_DIR,
     MY_SOFTWARE_CONFIG_DIR,
     MY_SOFTWARE_LOG_DIR,
-    MY_SOFTWARE_ENTITY_DIR
+    MY_SOFTWARE_ENTITY_DIR,
+    MY_SOFTWARE_FEATURE_DIR
 };

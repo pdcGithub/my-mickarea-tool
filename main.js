@@ -1,6 +1,8 @@
 const {app, BrowserWindow, Menu, ipcMain} = require('electron')
 const path = require('node:path')
 const MyIpc = require('./my-ipc');
+const { myParams } = require('./static-parameters')
+const fs = require('node:fs')
 
 //应用主窗口创建函数
 let mainWindow;
@@ -59,6 +61,18 @@ function doIPC(){
 
 }
 
+/**
+ * 检查自定义的文件夹是否已存在，如果没有则生成
+ */
+function checkAndCreateFolders(){
+    // 
+    if(!fs.existsSync(myParams.MY_SOFTWARE_HOME_DIR)) fs.mkdirSync(myParams.MY_SOFTWARE_HOME_DIR, {recursive:true});
+    if(!fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)) fs.mkdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
+    if(!fs.existsSync(myParams.MY_SOFTWARE_LOG_DIR)) fs.mkdirSync(myParams.MY_SOFTWARE_LOG_DIR, {recursive:true});
+    if(!fs.existsSync(myParams.MY_SOFTWARE_ENTITY_DIR)) fs.mkdirSync(myParams.MY_SOFTWARE_ENTITY_DIR, {recursive:true});
+    if(!fs.existsSync(myParams.MY_SOFTWARE_FEATURE_DIR)) fs.mkdirSync(myParams.MY_SOFTWARE_FEATURE_DIR, {recursive:true});
+}
+
 //设置一个主函数
 async function main(){
 
@@ -77,6 +91,9 @@ async function main(){
         app.quit()
         return ;
     }
+
+    // 文件夹处理
+    checkAndCreateFolders();
 
     //进程间通讯处理
     doIPC();
