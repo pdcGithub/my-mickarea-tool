@@ -72,15 +72,29 @@ function MyIpc() {
         return dialog.showMessageBox(window, option);
     };
 
-    //文件选择弹窗
-    this.fileselect = function(event, myFileFilter, window){
-        let fileFilters = [
-            {name:'所有文件', extensions: ['*']}
-        ];
-        if(myFileFilter){
-            fileFilters = myFileFilter;
+    /**
+     * 文件选择弹窗，通过配置 可以单选，也可以多选；另外还可以选择文件夹
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {object} options 参考 Electron 的 dialog 模块的 showOpenDialogSync 函数 的 options 参数
+     * @param {BrowserWindow} window 这是对话框的父窗口
+     * @returns {Array<string>} 返回一个字符串数组。如果没有选择，则返回空的数组。
+     */
+    this.fileselect = function(event, options, window){
+
+        // 先将外部配置参数 复制一下
+        let myOptions = Object.assign({}, options); 
+
+        // 这里处理一下默认配置
+        if(myOptions.title === undefined) myOptions.title = '请选择文件';
+        if(myOptions.filters === undefined) myOptions.filters = [ {name:'所有文件', extensions: ['*']} ];
+
+        // 开始调用文件选择框（返回 string[] | undefined, 用户选择的文件路径，如果对话框被取消了 ，则返回undefined。）
+        let result = dialog.showOpenDialogSync(window, myOptions);
+        if(result===undefined){
+            return [];
+        }else{
+            return result;
         }
-        return dialog.showOpenDialog(window, {title:'请选择一个文件', filters:fileFilters});
     };
 
     /**

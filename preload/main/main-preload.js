@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     showConfirm:(message)=>ipcRenderer.invoke('base:confirm', message),
 
     // 这里暴露一个 文件选择框的处理方法
-    showFileDialog:(fileFilters)=>ipcRenderer.invoke('file:fileselect', fileFilters),
+    showFileDialog:(options)=>ipcRenderer.invoke('file:fileselect', options),
     //这里暴露一个 文件路径打开的处理方法
     filePathOpen:(path)=>ipcRenderer.invoke('file:openpath', path),
     openJarExecLogDir:()=>ipcRenderer.invoke('file:openJarExecLogDir'),

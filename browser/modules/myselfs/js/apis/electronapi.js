@@ -189,24 +189,19 @@ class ElectronAPI {
     }
     
     /**
-     * 文件选择框的处理方法。它会打开一个对话框，在内部选择文件。选择并确定后，返回文件路径。如果取消或者关闭窗口，返回空字符串。
-     * @param {object} fileFilters 文件过滤对象。参考：[{ name:'jar 文件', extensions:['jar']}];
-     * @returns {Promise<string>} 返回一个 Promise 对象，他的值是 一个字符串。
+     * 文件选择框的处理方法。它会打开一个对话框，在内部选择文件，或者文件夹。
+     * @param {object} options 参考 Electron 的 dialog 模块的 showOpenDialogSync 函数 的 options 参数
+     * @returns {Promise<Array<string>>} 文件或者文件夹路径数组。如果取消了，则数组的长度为 0 
      */
-    async showFileDialog(fileFilters) {
+    async showFileDialog(options) {
         if(this.isInApp){
-            // 调用时，返回的是 一个 Promise ，内容是 Electron.OpenDialogReturnValue 类型的对象
-            let result = await MY_ELEC_API.showFileDialog(fileFilters);
-            let re = "";
-            if(!result.canceled){
-                //按了确定
-                re = result.filePaths[0];
-            }
+            // 调用时，返回的是 一个 字符串数组。如果没有选择，则数组为空数组
+            let result = await MY_ELEC_API.showFileDialog(options===undefined?{}:options);
             //返回文件路径
-            return Promise.resolve(re);
+            return Promise.resolve(result);
         }else{
             //浏览器模拟的结果
-            return Promise.resolve(`${TITLE} C:\\Users\\Michael\\Pictures\\20250528`);
+            return Promise.resolve([`${TITLE} C:\\Users\\Michael\\Pictures\\20250528`]);
         }
     }
 

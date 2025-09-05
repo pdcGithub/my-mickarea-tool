@@ -46,7 +46,7 @@ function doIPC(){
     ipcMain.handle('base:alert', (event, message)=>{return ipc.alert(event, message, mainWindow)})
     ipcMain.handle('base:confirm', (event, message)=>{return ipc.confirm(event, message, mainWindow)})
     //关于文件选择的弹窗处理 进程间通讯
-    ipcMain.handle('file:fileselect', (event, fileFilters)=>{return ipc.fileselect(event, fileFilters, mainWindow)})
+    ipcMain.handle('file:fileselect', (event, options)=>{return ipc.fileselect(event, options, mainWindow)})
     ipcMain.handle('file:openpath', (event, path)=>{return ipc.openFilePath(path)})
     ipcMain.handle('file:openJarExecLogDir', (event)=>{return ipc.openJarExecLogDir(event, mainWindow)})
     //关于shell命令执行的处理 进程间通讯

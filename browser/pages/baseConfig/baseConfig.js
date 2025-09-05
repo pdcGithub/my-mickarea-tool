@@ -33,7 +33,7 @@ let jvmPath = new Bs5EffFormTextInput('jvmPath',
             // 点击时，打开 Electron 文件选择器
             let result = await myapi.showFileDialog();
             // 设置
-            jvmPath.setValue(result);
+            jvmPath.setValue(result.length>0?result[0]:'');
         })
     }
 );
@@ -52,8 +52,8 @@ let jarPath = new Bs5EffFormTextInput('jarPath',
                 { name:'jar 文件', extensions:['jar']}
             ];
             // 点击时，打开 Electron 文件选择器
-            let result = await myapi.showFileDialog(fileFilters);
-            jarPath.setValue(result);
+            let result = await myapi.showFileDialog({filters:fileFilters});
+            jarPath.setValue(result.length>0?result[0]:'');
         })
     }
 );
