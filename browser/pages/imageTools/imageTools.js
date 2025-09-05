@@ -16,7 +16,7 @@
 
 import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
-import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffForm, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffRow, Bs5EffTextInput } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffForm, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffRow } from "../../modules/myselfs/js/bootstrap5Effect.js";
 import { DataUtil as du } from "../../utils/datatype.js";
 import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
 
@@ -73,10 +73,19 @@ let imageFiles = new Bs5EffFormTextArea('imageFiles',
         rows:5, 
         validRule:/[\S]+/,
         customEvent:du.genMap('click', async event=>{
+            // 配置文件选择器的 options 对象
+            let options = {
+                title:'请选择图片文件，可以多选',
+                filters:[
+                    { name: '图片文件', extensions: ['png', 'jpg', 'jpeg'] }
+                ],
+                properties:['openFile', 'multiSelections']
+            }
             // 打开文件选择器
-            let filepath = await myapi.showFileDialog();
+            let fileArr = await myapi.showFileDialog(options);
             //
-            imageFiles.setValue(filepath.trim());
+            let fileStr = fileArr.length>0?fileArr.join(', '):'';
+            imageFiles.setValue(fileStr);
         })
     }
 );
@@ -85,15 +94,21 @@ let imageFiles = new Bs5EffFormTextArea('imageFiles',
  */
 let imageDir = new Bs5EffFormTextInput('imageDir', 
     {
-        labelInfo:'源图片文件夹', helperInfo:'这里选择的将要处理的图片所在的文件夹', invalidInfo:'文件夹信息不能为空'
+        labelInfo:'源图片文件夹', helperInfo:'这里选择的将要处理的图片所在的文件夹。只能处理里面的 png, jpg, jpeg 格式的图片', invalidInfo:'文件夹信息不能为空'
     },
     {
         validRule:/[\S]+/,
         customEvent:du.genMap('click', async event=>{
+            // 配置文件选择器的 options 对象
+            let options = {
+                title:'请选择图片的源文件夹',
+                properties:['openDirectory']
+            }
             // 打开文件选择器
-            let filepath = await myapi.showFileDialog();
+            let fileArr = await myapi.showFileDialog(options);
             //
-            imageDir.setValue(filepath.trim());
+            let fileStr = fileArr.length>0?fileArr[0]:'';
+            imageDir.setValue(fileStr);
         })
     }
 );
@@ -101,30 +116,36 @@ let imageDir = new Bs5EffFormTextInput('imageDir',
  * 展示的最大宽度
  */
 let maxWidth = new Bs5EffFormTextInput('maxWidth', 
-    { labelInfo:'窗口最大宽度(单位 px)', helperInfo:'图片缩放是根据展示大小自动处理的，提供最大像素宽度即可', invalidInfo:'这里只能填写数字'},
-    { validRule:/^\d+$/}
+    { labelInfo:'窗口最大宽度(单位 px)', helperInfo:'图片缩放是根据展示大小自动处理的，提供最大像素宽度即可', invalidInfo:'这里只能填写整数，且不能0开头'},
+    { validRule:/^[1-9](\d+)?$/}
 );
 /**
  * 展示的最大高度
  */
 let maxHeight = new Bs5EffFormTextInput('maxHeight', 
-    { labelInfo:'窗口最大高度(单位 px)', helperInfo:'图片缩放是根据展示大小自动处理的，提供最大像素高度即可', invalidInfo:'这里只能填写数字'},
-    { validRule:/^\d+$/}
+    { labelInfo:'窗口最大高度(单位 px)', helperInfo:'图片缩放是根据展示大小自动处理的，提供最大像素高度即可', invalidInfo:'这里只能填写整数，且不能0开头'},
+    { validRule:/^[1-9](\d+)?$/}
 );
 /**
  * 输出文件夹
  */
 let outputFolder = new Bs5EffFormTextInput('outputFolder', 
     {
-        labelInfo:'图片输出文件夹', helperInfo:'这里是图片处理完毕，将要输出到的文件夹', invalidInfo:'文件夹信息不能为空'
+        labelInfo:'图片输出文件夹', helperInfo:'这里是图片处理完毕，将要输出到的文件夹。不要设置为根目录(比如, Windows 的 C: 盘)', invalidInfo:'文件夹信息不能为空'
     },
     {
         validRule:/[\S]+/,
         customEvent:du.genMap('click', async event=>{
+            // 配置文件选择器的 options 对象
+            let options = {
+                title:'请选择图片的源文件夹',
+                properties:['openDirectory']
+            }
             // 打开文件选择器
-            let filepath = await myapi.showFileDialog();
+            let fileArr = await myapi.showFileDialog(options);
             //
-            outputFolder.setValue(filepath.trim());
+            let fileStr = fileArr.length>0?fileArr[0]:'';
+            outputFolder.setValue(fileStr);
         })
     }
 );
@@ -213,16 +234,89 @@ function buildForm(){
  */
 async function run(){
 
+    // 这里是给浏览器处理的
+    if(!myapi.isInApp){
+        console.log(new Date(), '浏览器模拟...给予 jvm 和 jar 一些值');
+        jvm = 'test_jvm';
+        jar = 'test_jar';
+    }
+
+    // 配置填写校验
+    if(jvm.length<=0 || jar.length<=0) { new Bs5EffMessage('Java 或者 Jar 环境配置异常，请检查"基础配置"功能菜单').show(); return ; }
+
+    // 表单校验
+    if(!runningMode.valid()) { new Bs5EffMessage('图片提取模式 尚未选择，请先选择').show(); return ; }
+
+    // 根据提取模式，分别校验 ('-ifs','文件列表', '-ifd', '文件夹路径')
+    let comptArr = [runningMode, outputFolder, maxWidth, maxHeight];
+    // radio 的 getValue 函数返回的是一个数组
+    let modeVal = runningMode.getValue().length>0?runningMode.getValue()[0]:''; 
+    if(modeVal==='-ifs'){
+        comptArr.push(imageFiles);
+    }else if(modeVal==='-ifd'){
+        comptArr.push(imageDir);
+    }else{
+        new Bs5EffMessage(`图片提取模式异常 value=${modeVal}，请检查`).show(); return ;
+    }
+    // 校验
+    let falseNum = comptArr.map(cmp=>cmp.valid()).filter(result=>result===false).length;
+    if(falseNum>=1) { new Bs5EffMessage('表单校验不通过，请认真填写').show(); return ; }
+
+    // 通过校验后，再检查 输出路径 和 输入路径是否 重复
+    if(modeVal==='-ifd' && imageDir.getValue()===outputFolder.getValue()) {
+        new Bs5EffMessage(`输出文件夹 和 源图片文件夹 不能为同一个`).show(); 
+        return ;
+    }else if(modeVal==='-ifs'){
+        // 对于 文件列表 模式，需要检查 文件所在文件夹 与 输出文件夹是否 是同一个
+        let output = outputFolder.getValue().trim().split(/[\\\/]/).join('/'); // 将目录按照 / 重新拼接
+        let filesArr = imageFiles.getValue().trim().split(', ');
+        let wrongFileArr = filesArr.filter(filename=>{
+            // 拆解文件的目录
+            let arr = filename.split(/[\\\/]/);
+            let newpath = arr.slice(0, arr.length-1).join('/'); // 将文件的目录 按照 / 重新拼接
+            return output === newpath; // 如果 输出路径 和 文件所在目录一样，则是异常的
+        });
+        if(wrongFileArr.length>0){
+            new Bs5EffMessage(`输出文件夹 和 源图片所在文件夹 不能为同一个，这样会覆盖源图片`).show(); 
+            return ;
+        }
+    }
+
+    // 开始执行，拼接执行参数
+    let cmdArgs = ['-m','image_scaling', '-d', outputFolder.getValue().trim(), '-waz', maxWidth.getValue().trim(), '-haz', maxHeight.getValue().trim()];
+    cmdArgs.push(modeVal);
+    if(modeVal==='-ifs'){
+        cmdArgs.push(imageFiles.getValue().trim());
+    }else if(modeVal==='-ifd'){
+        cmdArgs.push(imageDir.getValue().trim());
+    }
+
+    // 正式执行
     document.dispatchEvent(pdcCmdRunning);
-    await myapi.showAlert('ok');
+    let result = await myapi.execJar(jvm, jar, cmdArgs);
     document.dispatchEvent(pdcCmdDone);
+
+    // 结果处理
+    new Bs5EffMessage(`程序运行${result.status==='ok'?'成功':'失败，请检查日志文件'}，后台返回消息：${result.info}`).show();
 }
 
 /**
  * 打开输出文件夹
  */
-function openOuputFolder(){
+async function openOuputFolder(){
 
+    // 先获取输出文件夹的路径
+    let outputPath = outputFolder.getValue().trim();
+
+    // 打开文件夹
+    if(outputPath.length>0){
+        let result = await myapi.filePathOpen(outputPath);
+        if(result.length>0){
+            new Bs5EffMessage(result).show();
+        }
+    }else{
+        new Bs5EffMessage('输出文件夹尚未指定, 无法打开').show();
+    }
 }
 
 /**
