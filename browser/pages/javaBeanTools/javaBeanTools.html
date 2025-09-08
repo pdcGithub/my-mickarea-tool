@@ -18,12 +18,27 @@
     <title>javaBeanTools</title>
 </head>
 <body>
-    <!-- 从这里开始编码 -->
-    测试 javaBeanTools
+    <div id="myContainer" class="container-fluid pt-3">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="config-tab" data-bs-toggle="tab" data-bs-target="#config-tab-pane" type="button" role="tab" >数据库连接配置</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dbobj-tab" data-bs-toggle="tab" data-bs-target="#dbobj-tab-pane" type="button" role="tab" >数据库对象选择</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="result-tab" data-bs-toggle="tab" data-bs-target="#result-tab-pane" type="button" role="tab" >实体类生成结果</button>
+            </li>
+        </ul>
+        <div class="tab-content py-2" id="myTabContent">
+            <div class="tab-pane fade show active" id="config-tab-pane" role="tabpanel" tabindex="0"></div>
+            <div class="tab-pane fade" id="dbobj-tab-pane" role="tabpanel"  tabindex="0"></div>
+            <div class="tab-pane fade" id="result-tab-pane" role="tabpanel"  tabindex="0"></div>
+        </div>
+    </div>
 
-    <!-- 引入 jQuery 的 js 文件和 bootstrap 的 js 文件 -->
-    <!-- <script src="../thirdparty/jQuery/jquery-3.7.1.min.js"></script> -->
-    <!-- <script src="../thirdparty/bootstrap4/bootstrap.bundle.min.js"></script> -->
+    <!-- 引入 bootstrap 的 js 文件 -->
+    <script src="../../modules/thirdpartys/bootstrap-5.3.6/bootstrap.bundle.js"></script>
     <!-- 本页面自己的 js 处理 -->
     <script src="javaBeanTools.js" type="module"></script>
 </body>
