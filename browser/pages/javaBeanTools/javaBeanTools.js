@@ -16,7 +16,7 @@
 
 import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
-import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffDropdownButton, Bs5EffForm, Bs5EffFormInputGroup, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffRow, Bs5EffTable, Bs5EffTextInput } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffDropdownButton, Bs5EffForm, Bs5EffFormInputGroup, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffRow, Bs5EffTable, Bs5EffTextInput, Bs5EffTextRadio } from "../../modules/myselfs/js/bootstrap5Effect.js";
 import { DataUtil as du } from "../../utils/datatype.js";
 import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
 
@@ -25,7 +25,7 @@ import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
 /**
  * 全局的表单 列组件 样式
  */
-let globalCssOfCol = 'col-12 col-md-6 col-xl-4 mb-3';
+let globalCssOfCol = 'col-12 col-md-6 col-xl-4 mb-2';
 
 /**
  * java 虚拟机的路径
@@ -41,12 +41,20 @@ let jar = '';
 /**
  * 配置名称（这是可选的，如果保存了配置，下一次可以直接加载，不同重新填写）
  */
-let myConfigName = new Bs5EffTextInput('myConfigName');
-let myConfigSave = new Bs5EffButton('myConfigSave', {name:'保存配置', outline:true, click:event=>configSave()});
-let myConfigLoad = new Bs5EffDropdownButton('myConfigLoad', {name:'加载配置', outline:true, click:event=>configLoad(event)});
+let myConfigName = new Bs5EffTextInput('myConfigName', {validRule:elem=>{
+    //如果没有填写，则不校验; 填写了则校验
+    let val = myConfigName.getValue().trim();
+    let re = true;
+    if(val.length>0){
+        re = /^[0-9a-zA-Z]+$/.test(val);
+    }
+    return re;
+}});
+let myConfigSave = new Bs5EffButton('myConfigSave', {name:'保存配置', outline:true, click:configSave});
+let myConfigLoad = new Bs5EffDropdownButton('myConfigLoad', {name:'加载配置', outline:true, click:configLoad});
 let myConfigGroup = new Bs5EffFormInputGroup('myConfigGroup', 
     {
-        labelInfo:'配置名称 (可选)', helperInfo:'这里填写配置名称, 可用于保存信息, 下次直接加载即可'
+        labelInfo:'配置名称 (可选)', helperInfo:'这里填写配置名称, 可用于保存信息, 下次直接加载即可', invalidInfo:'请填写名称, 英文或者数字的组合'
     },
     {
         initChildren:[myConfigName, myConfigSave, myConfigLoad]
@@ -86,7 +94,7 @@ let jdbcDriver = new Bs5EffFormTextInput('jdbcDriver',
         labelInfo:'JDBC 驱动类名', helperInfo:'这里填写的是 Java 链接数据库时，用到的数据库驱动类名', invalidInfo:'类名不能为空。格式可能为: com.xxx.yyy'
     },
     {
-        validRule:/[\S]+/
+        validRule:/^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)+$/
     }
 )
 jdbcDriver.cmdParam = '-jdn'; // 配置命令参数名称
@@ -96,10 +104,10 @@ jdbcDriver.cmdParam = '-jdn'; // 配置命令参数名称
  */
 let jdbcConnUrl = new Bs5EffFormTextInput('jdbcConnUrl', 
     {
-        labelInfo:'JDBC 链接 URL', helperInfo:'这里填写的是 JDBC 驱动 链接数据库时，调用的 URL 信息', invalidInfo:'URL 不能为空。格式可能为: jdbc://xxxx'
+        labelInfo:'JDBC 链接 URL', helperInfo:'这里填写的是 JDBC 驱动 链接数据库时，调用的 URL 信息', invalidInfo:'URL 不能为空。格式可能为: jdbc:xxxx:yyy'
     },
     {
-        validRule:/[\S]+/
+        validRule:/^jdbc:(oracle|mysql|sqlserver):[\.=:@;0-9a-zA-Z\_\\\/]+$/
     }
 )
 jdbcConnUrl.cmdParam = '-ju'; // 配置命令参数名称
@@ -109,10 +117,10 @@ jdbcConnUrl.cmdParam = '-ju'; // 配置命令参数名称
  */
 let dbUserName = new Bs5EffFormTextInput('dbUserName', 
     {
-        labelInfo:'数据库用户名 ( 连接数据库用 )', helperInfo:'这里填写的是, 连接数据库时用的账户名', invalidInfo:'数据库用户名不能为空'
+        labelInfo:'数据库用户名 ( 连接数据库用 )', helperInfo:'这里填写的是, 连接数据库时用的账户名', invalidInfo:'数据库用户名不能为空 ( 不包含双引号和单引号 )'
     },
     {
-        validRule:/[\S]+/
+        validRule:/^(?!.*["'])(?=.+)/
     }
 )
 dbUserName.cmdParam = '-dun'; // 配置命令参数名称
@@ -122,10 +130,10 @@ dbUserName.cmdParam = '-dun'; // 配置命令参数名称
  */
 let dbUserPasswd = new Bs5EffFormTextInput('dbUserPasswd', 
     {
-        labelInfo:'数据库用户密码 ( 连接数据库用 )', helperInfo:'这里填写的是, 连接数据库时用的账户对应的密码', invalidInfo:'数据库用户密码不能为空'
+        labelInfo:'数据库用户密码 ( 连接数据库用 )', helperInfo:'这里填写的是, 连接数据库时用的账户对应的密码', invalidInfo:'数据库用户密码不能为空 ( 不包含双引号和单引号 )'
     },
     {
-        validRule:/[\S]+/
+        validRule:/^(?!.*["'])(?=.+)/
     }
 )
 dbUserPasswd.cmdParam = '-dup'; // 配置命令参数名称
@@ -151,7 +159,7 @@ connTimeout.cmdParam = '-ct'; // 配置命令参数名称
  */
 let schemaName = new Bs5EffFormTextInput('schemaName', 
     {
-        labelInfo:'模式名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL是数据库名, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库模式名不能为空'
+        labelInfo:'模式名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL是数据库名, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库模式名 ( 数据库对象所属 )不能为空'
     },
     {
         validRule:/[\S]+/
@@ -164,7 +172,7 @@ schemaName.cmdParam = '-sc'; // 配置命令参数名称
  */
 let schemaUserName = new Bs5EffFormTextInput('schemaUserName', 
     {
-        labelInfo:'用户名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库模式名不能为空'
+        labelInfo:'用户名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库用户名 ( 数据库对象所属 )不能为空'
     },
     {
         validRule:/[\S]+/
@@ -250,7 +258,7 @@ dbSqlString.cmdParam = '-st'; // 配置命令参数名称
 let outputFolder = new Bs5EffFormTextInput('outputFolder', 
     {
         labelInfo:'Java 类的输出文件夹', 
-        helperInfo:'这里是处理完毕，将要输出到的文件夹。不要设置为根目录(比如, Windows 的 C: 盘)', 
+        helperInfo:'文件将要输出到的文件夹。不要设置为根目录(比如, Windows 的 C: 盘)', 
         invalidInfo:'文件夹信息不能为空'
     },
     {
@@ -287,6 +295,9 @@ documentReady(()=>{
     // 加载基础配置信息
     loadBaseConfig();
 
+    // 加载第一页的配置文件列表
+    configListRefresh();
+
     // 结束构建页面
     document.dispatchEvent(pdcCmdDone);
 });
@@ -294,7 +305,7 @@ documentReady(()=>{
 /**
  * 页面初始构建处理
  */
-async function buildForm(){
+function buildForm(){
 
     buildForm_1();
 
@@ -323,9 +334,9 @@ function buildForm_1(){
     // 页面 1 的组件列表
     let comptArr1 = [myConfigGroup, databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout];
     // 页面 1 的按钮
-    let btnConnTest = new Bs5EffButton('btnConnTest', {name:'数据库连接测试', cssClass:'me-1', click:event=>actionConnectDB()});
-    let btnRefresh = new Bs5EffButton('btnRefresh', {name:'清空配置', color:BTN_COR.success, cssClass:'me-1', click:event=>refreshPage()});
-    let btnRemoveAll = new Bs5EffButton('btnRemoveAll', {name:'清空缓存', color:BTN_COR.warning, cssClass:'me-1', click:event=>configRemoveAll()});
+    let btnConnTest = new Bs5EffButton('btnConnTest', {name:'数据库连接测试', cssClass:'me-1', click:actionConnectDB});
+    let btnRefresh = new Bs5EffButton('btnRefresh', {name:'清空配置', color:BTN_COR.success, cssClass:'me-1', click:refreshPage});
+    let btnRemoveAll = new Bs5EffButton('btnRemoveAll', {name:'清空缓存', color:BTN_COR.warning, cssClass:'me-1', click:configRemoveAll});
     // 定义布局
     let row1 = new Bs5EffRow('form1Row1');
     let row2 = new Bs5EffRow('form1Row2');
@@ -402,9 +413,33 @@ async function refreshPage(){
 /**
  * 数据库链接测试
  */
-function actionConnectDB(){
+async function actionConnectDB(){
     // 执行参数
     let cmdArgs = ['-m','DB_CONN_TEST'];
+
+    // 收集要处理的组件，然后保存成一个 对象。要注意的是 对象的内部顺序 不一定 跟写的顺序一致
+    let comptObjects = {databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout};
+    
+    // 开始判断
+    let invalidNum = Object.keys(comptObjects).map(name=>comptObjects[name].valid()).filter(val=>val===false).length;
+    if( invalidNum>0) { new Bs5EffMessage('第一页的表单尚未填写完成, 请检查').show(); return ; }
+
+    // 开始插入参数
+    Object.keys(comptObjects).forEach(key=>{
+        let cmpt = comptObjects[key];
+        let val = du.isTargetObject(cmpt, Bs5EffFormTextRadio) ? cmpt.getValue()[0] : cmpt.getValue().trim();
+        cmdArgs.push(comptObjects[key].cmdParam, val);
+    })
+
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.execJar(jvm, jar, cmdArgs); // {status:'ok', info:'', data:undefined};
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    // 返回消息
+    new Bs5EffMessage(`数据库连接${result.status==='ok'?'成功':'失败'}, 返回消息如下：${result.info}`).show();
+
 }
 
 /**
@@ -426,27 +461,135 @@ function actionGenJavaBeans(){
 /**
  * 保存配置信息
  */
-function configSave(){
+async function configSave(event){
+    
+    // 首先收集要保存的组件
+    let configNameVal = myConfigName.getValue().trim();
+    // 收集要处理的组件，然后保存成一个 对象。要注意的是 对象的内部顺序 不一定 跟写的顺序一致
+    let comptObjects = {databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout};
+    
+    // 开始判断
+    if(configNameVal.length<=0 || !myConfigName.valid()) { 
+        myConfigName.setValidFailed(); 
+        new Bs5EffMessage('配置文件的名称尚未填写正确, 请检查').show(); 
+        return ; 
+    }
+    let invalidNum = Object.keys(comptObjects).map(name=>comptObjects[name].valid()).filter(val=>val===false).length;
+    if( invalidNum>0) { new Bs5EffMessage('第一页的表单尚未填写完成, 请检查').show(); return ; }
 
+    // 构造一个 文件名
+    let filename = `beanconfig-${configNameVal}.properties`;
+    // 构造一个配置信息对象，传到后台，写入文件
+    let config = {filename};
+    // 遍历 comptObjects ，把键值对写入 config 然后 保存
+    Object.keys(comptObjects).forEach(name=>{
+        let cmpt = comptObjects[name];
+        let key = name;
+        // 对于 单选框，返回的是 一个 数组，取第一个就行了。一般文字组件，返回字符串
+        let value = du.isTargetObject(cmpt, Bs5EffFormTextRadio) ? cmpt.getValue()[0] : cmpt.getValue().trim();
+        // 填充
+        config[key] = value;
+    });
+
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    
+    let result = await myapi.saveConfig(config); //  保存
+    if(result.status==='ok'){
+        // 
+        new Bs5EffMessage(`配置保存成功，保存路径为：${result.configFileName}`).show();
+
+        // 如果保存成功，还需要刷新 配置下拉列表
+        await configListRefresh();
+    }else{
+        new Bs5EffMessage(`配置保存失败，后台异常信息为：${result.info}`).show();
+    }
+
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    
 }
 
 /**
  * 加载配置信息
  */
-function configLoad(event){
+async function configLoad(event){
 
+    // 配置文件名
+    let filename = `beanconfig-${event.target.getAttribute('option')}`;
+    
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.readConfig(filename); //{status:'ok', info:'', data:{}};
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    if(result.status!=='ok'){
+        new Bs5EffMessage(`配置保存失败，后台异常信息为：${result.info}`).show(); return ;
+    }
+
+    // 设置对应的值
+    if(result.data.filename!==undefined) {
+        let newName = result.data.filename;
+        newName = newName.substring(newName.indexOf('-')+1, newName.lastIndexOf('.'));
+        myConfigName.setValue(newName);
+    }
+    if(result.data.databaseType!==undefined) databaseType.setValue(result.data.databaseType);
+    if(result.data.jdbcDriver!==undefined) jdbcDriver.setValue(result.data.jdbcDriver);
+    if(result.data.jdbcConnUrl!==undefined) jdbcConnUrl.setValue(result.data.jdbcConnUrl);
+    if(result.data.dbUserName!==undefined) dbUserName.setValue(result.data.dbUserName);
+    if(result.data.dbUserPasswd!==undefined) dbUserPasswd.setValue(result.data.dbUserPasswd);
+    if(result.data.connTimeout!==undefined) connTimeout.setValue(result.data.connTimeout);
+
+    new Bs5EffMessage(`加载配置 ${filename} 完成`).show();
 }
 
 /**
  * 刷新配置信息列表
  */
-function configListRefresh(){
+async function configListRefresh(){
+    // 获取配置信息
+    let result = await myapi.getAllConfigId('beanconfig');
 
+    //
+    if(result.status !== 'ok') { new Bs5EffMessage(`加载配置文件列表失败，后台异常信息为：${result.info}`).show(); return ; }
+    if(result.status === 'ok' && (result.data===undefined || result.data.length<=0)){ 
+        new Bs5EffMessage(`当前功能没有加载到任何已保存的配置文件信息`).show(); return ;
+    }else{
+        // 开始刷新
+        let data = result.data.map(filename=>filename.substr(filename.indexOf('-')+1));
+        // 转 map
+        let tmpMap = new Map();
+        data.forEach(value=>{
+            tmpMap.set(value, value);
+        });
+        myConfigLoad.refresh(tmpMap);
+        new Bs5EffMessage(`当前已加载到 ${data.length} 个可用配置文件`).show();
+    }
 }
 
 /**
  * 删除所有的原有配置文件
  */
-function configRemoveAll(){
+async function configRemoveAll(){
 
+    // 先确认一次
+    let choose = await myapi.showConfirm('确定要清空所有配置信息吗？这样将会删除本功能的所有 properties 配置文件。');
+    
+    if(choose){
+        // 开始 == 加载动画
+        document.dispatchEvent(pdcCmdRunning);
+        // 开始执行
+        let result = await myapi.removeAllConfig('beanconfig'); // {status:'ok', info:''}
+        // 结束 == 加载动画
+        document.dispatchEvent(pdcCmdDone);
+
+        if(result.status!=='ok'){
+            new Bs5EffMessage(`删除配置文件失败, 信息如下：${result.info}`).show(); return ;
+        }else{
+            // 刷新页面
+            window.location.reload();
+        }
+    }
 }
