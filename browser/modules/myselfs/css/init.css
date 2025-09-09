@@ -9,7 +9,32 @@
 @import url('../../thirdpartys/bootstrap-5.3.6/bootstrap.css');
 @import url('../../thirdpartys/bootstrap-5.3.6/bootstrap-icons.css');
 
-/* ===================================  自定义的通用样式处理 ==================== 调整默认的文字颜色 */
+/* ===================================  自定义的变量处理 ==================== */
+:root {
+    --pdc-primary-font-color: #424242; /*页面文字主颜色*/
+    --pdc-helper-font-color: #a5a5a5;  /*表单输入组件帮助信息的文字颜色*/
+}
+
+/* ===================================  自定义的通用样式处理 ==================== */
+
+/* 页面默认的文字颜色 修改 */
 body{
-    color: var(--bs-gray-900);
+    color: var(--pdc-primary-font-color);
+}
+
+/* 表单的帮助信息文字颜色 修改 */
+.form-text{
+    color: var(--pdc-helper-font-color);
+}
+
+/* tab 页 的标题文字颜色 修改 */
+.nav-link {
+    color: var(--pdc-primary-font-color);
+}
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+    color: var(--pdc-primary-font-color);
+}
+.nav-link:hover, .nav-link:focus {
+    color: #000;
 }
