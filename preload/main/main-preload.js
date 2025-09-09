@@ -37,7 +37,7 @@ contextBridge.exposeInMainWorld('ElectronAPI', {
     //这里暴露4个 关于数据库配置文件的读写方法
     saveConfig:(dbConfig)=>ipcRenderer.invoke('db:saveconfig', dbConfig),
     readConfig:(configName)=>ipcRenderer.invoke('db:readconfig', configName),
-    getAllConfigId:()=>ipcRenderer.invoke('db:getallconfigid'),
-    removeAllConfig:()=>ipcRenderer.invoke('db:removeallconfig')
+    getAllConfigId:(preffix)=>ipcRenderer.invoke('db:getallconfigid', preffix),
+    removeAllConfig:(preffix)=>ipcRenderer.invoke('db:removeallconfig', preffix)
 
 });

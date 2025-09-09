@@ -288,14 +288,14 @@ class ElectronAPI {
     }
     
     /**
-     * 获取当前机器所有的配置文件名
+     * 根据前缀，获取当前机器所有的配置文件名
      * @returns {Promise<object>} 一个 Promise 对象，它的值是 {status:'ok', info:'', data:[]}; 这种形式
      */
-    async getAllConfigId() {
+    async getAllConfigId(preffix) {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:'', data:[]}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。data 为配置文件名 数组 。
-            return await MY_ELEC_API.getAllConfigId();
+            return await MY_ELEC_API.getAllConfigId(preffix);
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`, data:['file1.properties','file2.properties']});
@@ -303,14 +303,14 @@ class ElectronAPI {
     }
 
     /**
-     * 删除当前机器的所有配置文件。
+     * 根据前缀，删除当前机器的所有配置文件。
      * @returns {Promise<object>} 一个 Promise 对象，它的值是 {status:'ok', info:''}; 这种形式
      */
-    async removeAllConfig() {
+    async removeAllConfig(preffix) {
         if (this.isInApp) {
             // 返回一个 Promise ，值为 {status:'ok', info:''}; 这种形式。 status 可能为 ok ，也可能为 error.
             // 一般以 status 和 info 参数为判断依据。
-            return await MY_ELEC_API.removeAllConfig();
+            return await MY_ELEC_API.removeAllConfig(preffix);
         } else {
             //浏览器模拟的结果
             return Promise.resolve({status:'ok', info:`${TITLE}`});

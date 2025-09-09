@@ -176,11 +176,20 @@ function MyIpc() {
         return result;
     };
 
-    //保存配置 
+    /**
+     * 保存配置 
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {object} myOwnConfig 要保存的配置信息对象
+     * @returns {object} 是一个信息对象 比如：{status:'ok', info:'', configFileName:''}
+     */
     this.saveConfig = function(event, myOwnConfig){
         //定义一个返回的结果对象
         let result = {status:'ok', info:'', configFileName:''};
         try{
+            // 记录日志
+            mylogger.debug('即将保存配置信息，配置如下：');
+            mylogger.debug(myOwnConfig);
+
             //文件夹不存在，则创建
             if(!fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 fs.mkdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {recursive:true});
@@ -220,11 +229,16 @@ function MyIpc() {
         return result;
     };
 
-    //读取配置
+    /**
+     * 读取配置
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {string} configName 配置文件名
+     * @returns {object} 是一个信息对象 比如：{status:'ok', info:'', data:{}}
+     */
     this.readConfig = function(event, configName){
         let result = {status:'ok', info:'', data:{}}
         //文件名校验正则
-        let fileRegexp = /^[0-9a-zA-Z]+\.properties$/;
+        let fileRegexp = /^[0-9a-zA-Z\-]+\.properties$/;
         try{
             let filePath = myParams.MY_SOFTWARE_CONFIG_DIR + path.sep + configName;
             //参数检查
@@ -252,18 +266,24 @@ function MyIpc() {
         return result;
     };
 
-    //获取当前所储存的所有配置文件名
-    this.getAllConfigId = function(){
+    /**
+     * 根据前缀 获取当前所储存的所有配置文件名
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {string} preffix 一个配置文件的前缀字符串
+     * @returns {object} 是一个信息对象 比如：{status:'ok', info:'', data:[]}
+     */
+    this.getAllConfigId = function(event, preffix){
         let result = {status:'ok', info:'', data:[]}
         try{
             if(fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 //如果文件夹存在，才执行遍历
                 let filesArray = fs.readdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
-                if(filesArray && filesArray.length>0){
-                    for(file of filesArray){
-                        if(file.isFile()) result.data.push(file.name);
-                    }
-                }
+                filesArray
+                .filter(file=>file.isFile()) /* 只获取文件 */
+                .filter(file=>preffix===undefined || file.name.startsWith(preffix)) /* 如果 preffix 有传递，则只获取 preffix 前缀的文件 */
+                .forEach(file=>{
+                    result.data.push(file.name); /* 将符合的文件名，放入 data 数组 */
+                });
             }
         }catch(error){
             result.status='error';
@@ -272,22 +292,26 @@ function MyIpc() {
         return result;
     };
 
-    //删除所有的配置文件
-    this.removeAllConfigFile = function(){
+    /**
+     * 根据前缀 删除所有的配置文件
+     * @param {Electron.IpcMainInvokeEvent} event IPC 事件对象
+     * @param {string} preffix 一个配置文件的前缀字符串
+     * @returns {object} 是一个信息对象 比如：{status:'ok', info:''}
+     */
+    this.removeAllConfigFile = function(event, preffix){
         let result = {status:'ok', info:''}
         try{
             //如果有配置文件夹，则执行删除
             if(fs.existsSync(myParams.MY_SOFTWARE_CONFIG_DIR)){
                 //遍历文件夹下的所有配置文件
                 let filesArray = fs.readdirSync(myParams.MY_SOFTWARE_CONFIG_DIR, {withFileTypes:true});
-                if(filesArray && filesArray.length>0){
-                    for(file of filesArray){
-                        //判断是否为 配置文件，要与文件后缀匹配
-                        if(file.isFile() && /^.+\.properties$/.test(file.name)){
-                            fs.rmSync(myParams.MY_SOFTWARE_CONFIG_DIR+path.sep+file.name, {force:true});
-                        }
-                    }
-                }
+                filesArray
+                .filter(file=>file.isFile()) /* 只获取文件 */
+                .filter(file=>preffix===undefined || file.name.startsWith(preffix)) /* 如果 preffix 有传递，则只获取 preffix 前缀的文件 */
+                .forEach(file=>{
+                    // 遍历删除
+                    fs.rmSync(myParams.MY_SOFTWARE_CONFIG_DIR+path.sep+file.name, {force:true});
+                });
             }
         }catch(error){
             result.status='error';

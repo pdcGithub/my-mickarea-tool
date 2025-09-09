@@ -56,8 +56,8 @@ function doIPC(){
     //关于数据库链接配置的保存、读取处理 进程间通讯
     ipcMain.handle('db:saveconfig', (event, dbConfig)=>{return ipc.saveConfig(event, dbConfig)})
     ipcMain.handle('db:readconfig', (event, configName)=>{return ipc.readConfig(event, configName)})
-    ipcMain.handle('db:getallconfigid', (event)=>{return ipc.getAllConfigId()})
-    ipcMain.handle('db:removeallconfig', (event)=>{return ipc.removeAllConfigFile()})
+    ipcMain.handle('db:getallconfigid', (event, preffix)=>{return ipc.getAllConfigId(event, preffix)})
+    ipcMain.handle('db:removeallconfig', (event, preffix)=>{return ipc.removeAllConfigFile(event, preffix)})
 
 }
 
