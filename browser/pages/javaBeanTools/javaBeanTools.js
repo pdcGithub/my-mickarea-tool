@@ -16,9 +16,9 @@
 
 import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
-import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffDropdownButton, Bs5EffForm, Bs5EffFormInputGroup, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffRow, Bs5EffTable, Bs5EffTextInput, Bs5EffTextRadio } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { Bs5EffButton, Bs5EffCol, Bs5EffContainer, Bs5EffDropdownButton, Bs5EffForm, Bs5EffFormInputGroup, Bs5EffFormTextArea, Bs5EffFormTextInput, Bs5EffFormTextRadio, Bs5EffMessage, Bs5EffModalDialog, Bs5EffRow, Bs5EffTable, Bs5EffTextCheckbox, Bs5EffTextInput } from "../../modules/myselfs/js/bootstrap5Effect.js";
 import { DataUtil as du } from "../../utils/datatype.js";
-import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
+import { BTN_COR, BTN_SIZE } from "../../modules/myselfs/js/bootstrap5UI.js";
 
 // ======== 这里定义一些需要用到的全局变量
 
@@ -162,7 +162,11 @@ let schemaName = new Bs5EffFormTextInput('schemaName',
         labelInfo:'模式名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL是数据库名, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库模式名 ( 数据库对象所属 )不能为空'
     },
     {
-        validRule:/[\S]+/
+        validRule:/[\S]+/,
+        customEvent:du.genMap('click', event=>{
+            // 如果是sqlserver 则直接填写 dbo
+            if(databaseType.getValue()[0]==='sqlserver') schemaName.setValue('dbo');
+        })
     }
 )
 schemaName.cmdParam = '-sc'; // 配置命令参数名称
@@ -175,7 +179,15 @@ let schemaUserName = new Bs5EffFormTextInput('schemaUserName',
         labelInfo:'用户名 ( 数据库对象所属 )', helperInfo:'与连接信息不同,这里是数据库对象所属。MySQL, Oracle是用户名, SqlServer是 dbo', invalidInfo:'数据库用户名 ( 数据库对象所属 )不能为空'
     },
     {
-        validRule:/[\S]+/
+        validRule:/[\S]+/,
+        customEvent:du.genMap('click', event=>{
+            // 如果是sqlserver 则直接填写 dbo
+            if(databaseType.getValue()[0]==='sqlserver') schemaUserName.setValue('dbo');
+            // 如果是oracle ，则直接赋值 schema 值
+            if(databaseType.getValue()[0]==='oracle' && schemaName.getValue().trim().length>0){
+                schemaUserName.setValue(schemaName.getValue().trim());
+            }
+        })
     }
 )
 schemaUserName.cmdParam = '-scu'; // 配置命令参数名称
@@ -217,9 +229,11 @@ let actionType = new Bs5EffFormTextRadio('actionType',
             if(actionTypeVal === 'object'){
                 dbObjectNames.enable();
                 dbSqlString.disable();
+                btnSelectDBObjs.enable();
             }else if(actionTypeVal === 'sql'){
                 dbObjectNames.disable();
                 dbSqlString.enable();
+                btnSelectDBObjs.disable();
             }
         })
     }
@@ -279,6 +293,35 @@ let outputFolder = new Bs5EffFormTextInput('outputFolder',
 );
 outputFolder.cmdParam = '-d'; // 配置命令参数名称
 
+/**
+ * 一个关于表和视图的复选框（初始只是赋值，让他有固定的类型，后面显示会替换）
+ */
+let tabsAndViewsCheckboxes = new Bs5EffTextCheckbox();
+
+/**
+ * 一个模态对话框
+ */
+let myTabsAndViews = new Bs5EffModalDialog('myTabsAndViews', '请选择数据库表、视图', '', 
+    {
+        setStatic:true, scrollable:true, centered:true, sizeString:'lg',
+        customBtns:[
+            new Bs5EffButton('checkTabsAndViews', {
+                name:'确定', 
+                click:event=>{
+                    // 确定时，把选择的对象名 写入填写框，然后关闭
+                    let checkedVals = tabsAndViewsCheckboxes.getValue();
+                    checkedVals.length>0 ? dbObjectNames.setValue(checkedVals.join(',')) : dbObjectNames.setValue('');
+                    myTabsAndViews.hide();
+                }
+            })
+        ]
+    }
+);
+
+// 页面 2 的按钮
+let btnSelectDBObjs = new Bs5EffButton('btnSelectDBObjs', {name:'选取库表、视图', cssClass:'me-1', click:actionSelectDBObj});
+let btnRunGen = new Bs5EffButton('btnRunGen', {name:'生成实体', color:BTN_COR.success, cssClass:'me-1', click:actionGenJavaBeans});
+
 // ====== 
 
 documentReady(()=>{
@@ -305,7 +348,7 @@ documentReady(()=>{
 /**
  * 页面初始构建处理
  */
-function buildForm(){
+async function buildForm(){
 
     buildForm_1();
 
@@ -319,7 +362,10 @@ function buildForm(){
     databaseType.setValue('mysql');
     connTimeout.setValue('5000');
     charset.setValue('utf-8');
-    actionType.setValue('object')
+    actionType.setValue('object');
+    // 设置实体类的输出目录
+    let defaultOutputDir = await myapi.getStaticParameter('MY_SOFTWARE_ENTITY_DIR');
+    outputFolder.setValue(defaultOutputDir);
 }
 
 /**
@@ -361,9 +407,10 @@ function buildForm_2(){
 
     // 页面 2 的组件列表
     let comptArr2 = [schemaName, schemaUserName, charset, actionType, dbObjectNames, dbSqlString, outputFolder];
-    // 页面 2 的按钮
-    let btnSelectDBObjs = new Bs5EffButton('btnSelectDBObjs', {name:'选取库表、视图', cssClass:'me-1', click:actionSelectDBObj});
-    let btnRunGen = new Bs5EffButton('btnRunGen', {name:'生成实体', color:BTN_COR.success, cssClass:'me-1', click:actionGenJavaBeans});
+
+    // 页面 2 的普通按钮
+    let btnOpenFolder = new Bs5EffButton('btnOpenFolder', {name:'打开输出文件夹', color:BTN_COR.warning, click:openOuputFolder});
+    
     // 定义布局
     let row1 = new Bs5EffRow('form2Row1');
     let row2 = new Bs5EffRow('form2Row2');
@@ -371,7 +418,7 @@ function buildForm_2(){
     comptArr2.forEach((cmpt, index)=>{
         row1.addChildren(new Bs5EffCol(`form2Row1col${index}`, {initChildren:[cmpt], cssClass:globalCssOfCol}));
     });
-    row2.addChildren(new Bs5EffCol('form2Row2Col1', {initChildren:[btnSelectDBObjs, btnRunGen], cssClass:'col-12'}));
+    row2.addChildren(new Bs5EffCol('form2Row2Col1', {initChildren:[btnSelectDBObjs, btnRunGen, btnOpenFolder], cssClass:'col-12'}));
     form2.addChildren(row1, row2);
     container2.addChildren(form2);
 
@@ -414,6 +461,17 @@ async function refreshPage(){
  * 数据库链接测试
  */
 async function actionConnectDB(){
+
+    // 这里是给浏览器处理的
+    if(!myapi.isInApp){
+        console.log(new Date(), '浏览器模拟...给予 jvm 和 jar 一些值');
+        jvm = 'test_jvm';
+        jar = 'test_jar';
+    }
+
+    // 配置填写校验
+    if(jvm.length<=0 || jar.length<=0) { new Bs5EffMessage('Java 或者 Jar 环境配置异常，请检查"基础配置"功能菜单').show(); return ; }
+
     // 执行参数
     let cmdArgs = ['-m','DB_CONN_TEST'];
 
@@ -445,17 +503,152 @@ async function actionConnectDB(){
 /**
  * 数据库对象选择
  */
-function actionSelectDBObj(){
+async function actionSelectDBObj(){
+
+    // 这里是给浏览器处理的
+    if(!myapi.isInApp){
+        console.log(new Date(), '浏览器模拟...给予 jvm 和 jar 一些值');
+        jvm = 'test_jvm';
+        jar = 'test_jar';
+    }
+
+    // 配置填写校验
+    if(jvm.length<=0 || jar.length<=0) { new Bs5EffMessage('Java 或者 Jar 环境配置异常，请检查"基础配置"功能菜单').show(); return ; }
+
     // 执行参数
     let cmdArgs = ['-m','DB_OBJ_SELECT'];
+
+    // =========== form 1 填写检查
+    let form1Objs = {databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout};
+    let invalidNum = Object.keys(form1Objs).map(name=>form1Objs[name].valid()).filter(val=>val===false).length;
+    if( invalidNum>0) { new Bs5EffMessage('第一页的表单尚未填写完成, 请检查').show(); document.getElementById('config-tab').click(); return ; }
+
+    // =========== fomr 2 填写检查 (选择数据库对象 只检查 模式名 和 模式用户名)
+    let form2Objs = {schemaName, schemaUserName};
+    let invalidNum2 = Object.keys(form2Objs).map(name=>form2Objs[name].valid()).filter(val=>val===false).length;
+    if( invalidNum2>0) { new Bs5EffMessage('第二页的表单（模式名 和 模式用户名）尚未填写完成, 请检查').show(); return ; }
+
+    // =========== 开始执行数据库对象查询
+    let runObjects = {databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout, schemaName, schemaUserName};
+
+    // 开始插入参数
+    Object.keys(runObjects).forEach(key=>{
+        let cmpt = runObjects[key];
+        let val = du.isTargetObject(cmpt, Bs5EffFormTextRadio) ? cmpt.getValue()[0] : cmpt.getValue().trim();
+        cmdArgs.push(runObjects[key].cmdParam, val);
+    });
+
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.execJar(jvm, jar, cmdArgs); // {status:'ok', info:'', data:undefined};
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    /* 根据结果来处理 */
+    if(result.status === 'ok'){
+        // 开始根据查询结果，展示数据库表、视图
+        if(result.data===undefined || result.data.length<=0){
+            new Bs5EffMessage(`获取不到有效的数据库表、视图信息，请检查数据库用户是否有对应信息，或者数据库用户是否有权限查询`).show();
+        }else{
+            let chkOptions = new Map();
+            result.data.forEach(value=>{
+                chkOptions.set(value, value);
+            });
+            // 重新赋值一个 复选框组件对象
+            tabsAndViewsCheckboxes = new Bs5EffTextCheckbox(undefined, { chkOptions:chkOptions });
+            // 这里增加一个容器，方便给内容排版
+            let tmpContainer = new Bs5EffContainer(undefined, {isFluid:true, cssClass:'grid-columns-3', initChildren:[tabsAndViewsCheckboxes]});
+            // 这里直接显示
+            myTabsAndViews.show(tmpContainer);
+        }
+    }else{
+        new Bs5EffMessage(`后台处理异常, 信息如下：${result.info}`).show();
+    }
 }
 
 /**
  * Java 实体类的生成处理
  */
-function actionGenJavaBeans(){
+async function actionGenJavaBeans(){
+
+    // 这里是给浏览器处理的
+    if(!myapi.isInApp){
+        console.log(new Date(), '浏览器模拟...给予 jvm 和 jar 一些值');
+        jvm = 'test_jvm';
+        jar = 'test_jar';
+    }
+
+    // 配置填写校验
+    if(jvm.length<=0 || jar.length<=0) { new Bs5EffMessage('Java 或者 Jar 环境配置异常，请检查"基础配置"功能菜单').show(); return ; }
+
     // 执行参数
     let cmdArgs = ['-m','JAVA_BEAN_GEN'];
+
+    // =========== form 1 填写检查
+    let form1Objs = {databaseType, jdbcDriver, jdbcConnUrl, dbUserName, dbUserPasswd, connTimeout};
+    let invalidNum = Object.keys(form1Objs).map(name=>form1Objs[name].valid()).filter(val=>val===false).length;
+    if( invalidNum>0) { new Bs5EffMessage('第一页的表单尚未填写完成, 请检查').show(); document.getElementById('config-tab').click(); return ; }
+
+    // =========== fomr 2 填写检查
+    let form2Objs = {schemaName, schemaUserName, charset, outputFolder, actionType};
+    // 根据不同处理模式，放入不同的 组件参数，用于校验，也用于执行
+    if(actionType.getValue()[0]==='object'){
+        form2Objs['dbObjectNames'] = dbObjectNames;
+    }else{
+        form2Objs['dbSqlString'] = dbSqlString;
+    }
+    let invalidNum2 = Object.keys(form2Objs).map(name=>form2Objs[name].valid()).filter(val=>val===false).length;
+    if( invalidNum2>0) { new Bs5EffMessage('第二页的表单尚未填写完成, 请检查').show(); return ; }
+
+    // =========== 开始执行数据库对象查询 (这里是最终执行， 将 form1 和 form2 的内容合并就行了)
+    let runObjects = Object.assign(form1Objs, form2Objs);
+
+    // 开始插入参数
+    Object.keys(runObjects).forEach(key=>{
+        let cmpt = runObjects[key];
+        let val = du.isTargetObject(cmpt, Bs5EffFormTextRadio) ? cmpt.getValue()[0] : cmpt.getValue().trim();
+        // 如果是 数据库对象名称信息，要去掉所有空格
+        if(key==='dbObjectNames') val = val.replace(/[\s]+/g, '');
+        cmdArgs.push(runObjects[key].cmdParam, val);
+    });
+
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.execJar(jvm, jar, cmdArgs); // {status:'ok', info:'', data:undefined};
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    /* 根据结果来处理 */
+    if(result.status === 'ok'){
+        // 返回的信息是一个数组 []，数组内部是一个 对象，有属性如下：{dbObjName, dbTakes, entityName, filePath, status, statusInfo}
+        // 表格的标题如下：['数据库对象名','实体对象名','处理状态','处理信息','操作','文件存放路径']
+        
+        // 检查返回的 data 是否是一个对象数组
+        if(!Array.isArray(result.data)) { new Bs5EffMessage(`后台处理异常, 获取不到有效的返回结果集`).show(); return ; };
+
+        // 将返回的数据，转换为 可以设置到组件的数组
+        let newData = [];
+        result.data.forEach(obj=>{
+            let opt = !obj.status ? '' : new Bs5EffButton(undefined, {name:'打开', size:BTN_SIZE.small, click: async event=>{
+                let tr = event.target.parentElement.parentElement;
+                let fpath = tr.lastChild.innerHTML;
+                await myapi.filePathOpen(fpath);
+            }});
+            // 这里要注意，内部只能是字符串，或者 组件
+            let tmpArr = [`${obj.dbObjName}`, `${obj.entityName}`, `${obj.status?'ok':'error'}`, `${obj.statusInfo}`, opt, `${obj.filePath}`];
+            // 加入数组
+            newData.push(tmpArr);
+        });
+
+        new Bs5EffMessage(`后台处理成功，结果如表格所示`).show();
+        // 显示表格
+        resultTable.refreshTable(newData);
+        // 跳转第3页
+        document.getElementById('result-tab').click();
+    }else{
+        resultTable.refreshTable([[]]);
+        new Bs5EffMessage(`后台处理异常, 信息如下：${result.info}`).show();
+    }
 }
 
 /**
@@ -591,5 +784,24 @@ async function configRemoveAll(){
             // 刷新页面
             window.location.reload();
         }
+    }
+}
+
+/**
+ * 打开输出文件夹
+ */
+async function openOuputFolder(){
+
+    // 先获取输出文件夹的路径
+    let outputPath = outputFolder.getValue().trim();
+
+    // 打开文件夹
+    if(outputPath.length>0){
+        let result = await myapi.filePathOpen(outputPath);
+        if(result.length>0){
+            new Bs5EffMessage(result).show();
+        }
+    }else{
+        new Bs5EffMessage('输出文件夹尚未指定, 无法打开').show();
     }
 }
