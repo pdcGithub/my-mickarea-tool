@@ -38,3 +38,19 @@ body{
 .nav-link:hover, .nav-link:focus {
     color: #000;
 }
+
+/* 调整 h 的字体颜色 */
+h6, .h6, h5, .h5, h4, .h4, h3, .h3, h2, .h2, h1, .h1 {
+    color: var(--pdc-primary-font-color);
+}
+
+/* 调整 modal 里面的字体颜色 */
+.modal-content {
+    color: var(--pdc-primary-font-color);
+}
+
+/* 顶一个让 子元素 分成3列的 样式 */
+.grid-columns-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
