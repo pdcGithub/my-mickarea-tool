@@ -124,7 +124,7 @@ function MyIpc() {
 
         // 开始执行
         try{
-            let timeout = 60000; // 60 秒
+            let timeout = 600000; // 600 秒
             let encoding = 'buffer';
 
             // 执行
