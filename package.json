@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "log4js": "^6.9.1"
+    "log4js": "^6.9.1",
+    "iconv-lite": "^0.7.0"
   }
 }
