@@ -26,6 +26,25 @@ import { DataUtil as du } from "../../../../utils/datatype.js";
 import { Bs5EffLoading } from "../bootstrap5Effect.js";
 
 /**
+ * 这里统一提示未捕捉的 Javascript 异常
+ */
+window.addEventListener('error', (event)=>{
+    // 这里用于处理没有捕捉的 JavaScript 异常
+    let errMsg = `注意，这里遇到一个未处理的页面 JS 异常。异常信息：${event.message}, JS 文件：${event.filename}, 行号：${event.lineno}, 列号：${event.colno}`;
+    errMsg += ' [ 这消息如果在 Electron 环境下，会让页面失去焦点，无法再操作，请注意 ]';
+    alert(errMsg);
+});
+/**
+ * 这里统一提示未捕捉的 Javascript Promise 异常
+ */
+window.addEventListener('unhandledrejection', (event)=>{
+    // 这里用于处理没有捕捉的 JS Promise 异常
+    let errMsg = `注意，这里遇到一个未处理的页面 JS Promise 异常。信息：${event.reason}`;
+    errMsg += ' [ 这消息如果在 Electron 环境下，会让页面失去焦点，无法再操作，请注意 ]';
+    alert(errMsg);
+});
+
+/**
  * 定义一个加载动画组件常量
  */
 const MY_LOADING = new Bs5EffLoading('myOwnLoading');
