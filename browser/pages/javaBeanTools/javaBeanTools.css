@@ -7,3 +7,34 @@
 
 /* ============================================ 导入初始化样式处理 */
 @import url('../../modules/myselfs/css/init.css');
+
+/* 让这个页面的高度，限制在可视窗口范围 */
+html, body {
+    height: 100%;
+}
+
+/* 这里让容器的高度 匹配外部容器高度 */
+#myContainer{
+    height: 100%;
+}
+
+/* 这里是让 tab 内部的高度限制为 外部容器高度，这样窗口的滚动条就不会显示到最外边，而是里面*/
+#myTabContent{
+    height: calc(100% - 42px);
+}
+#myTabContent div[role='tabpanel']{
+    height: 100%;
+    overflow: auto;
+}
+
+/* 这里用 粘性定位，让表格头部在垂直滚动时固定 */
+.table-responsive {
+    height: 100%;
+}
+.table thead {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 2;
+}

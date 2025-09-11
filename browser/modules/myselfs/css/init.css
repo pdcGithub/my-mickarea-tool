@@ -54,3 +54,8 @@ h6, .h6, h5, .h5, h4, .h4, h3, .h3, h2, .h2, h1, .h1 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
 }
+
+/* 修改表格的文字样式 */
+.table > :not(caption) > * > * {
+    color: var(--pdc-primary-font-color);
+}

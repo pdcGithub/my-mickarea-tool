@@ -66,7 +66,7 @@ let myConfigGroup = new Bs5EffFormInputGroup('myConfigGroup',
  */
 let resultTable = new Bs5EffTable('resultTable', 
     ['数据库对象名','实体对象名','处理状态','处理信息','操作','文件存放路径'], [[]], 
-    {rowStriped:true, hover:true, groupDivider:true, alignMiddle:true}
+    {rowStriped:true, hover:true, groupDivider:true, alignMiddle:true, responsive:true}
 );
 
 /**
@@ -261,7 +261,7 @@ let dbSqlString = new Bs5EffFormTextArea('dbSqlString',
         labelInfo:'数据库 select 语句', helperInfo:'这里是要生成 Java 实体的数据库 select 语句, 比如: select 1 from dual', invalidInfo:'数据库 select 语句不能为空'
     },
     {
-        rows:4, validRule:/[\S]+/
+        rows:4, validRule:/^[\s]*select/i
     }
 )
 dbSqlString.cmdParam = '-st'; // 配置命令参数名称
