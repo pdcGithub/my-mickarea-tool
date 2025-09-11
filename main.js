@@ -29,7 +29,7 @@ let createMainWindow = () => {
     //mainWindow.maximize();
     
     //开发者工具
-    mainWindow.webContents.openDevTools()
+    //mainWindow.webContents.openDevTools()
 
 }
 

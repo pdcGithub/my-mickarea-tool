@@ -43,10 +43,18 @@ documentReady(()=>{
 function windowBtnsBinding(){
 
     // 开始绑定 点击 事件
-    actionBindingBySelector('#toMin, #toMax, #toClose, #toJarLog, #toAppLog', 'click', async (event) => {
+    actionBindingBySelector('#topNavForm button', 'click', async (event) => {
         let idVal = event.currentTarget.id;
         let promiseValue = {status:true, info:''};
         switch(idVal){
+            case 'toRefresh':
+                window.location.reload();
+                break;
+            case 'toBlog':
+                // 打开 我自己的博客 网站
+                promiseValue = await myapi.setWindowBehavior('blog');
+                if(!promiseValue.status) new Bs5EffMessage(`打开 博客网站 失败，${promiseValue.info}`).show();
+                break;
             case 'toAppLog':
                 // 打开 app 日志文件夹
                 promiseValue = await myapi.setWindowBehavior('appLog');

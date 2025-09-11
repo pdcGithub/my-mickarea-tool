@@ -1,5 +1,5 @@
 //添加 electron 依赖
-const { dialog, shell } = require('electron')
+const { dialog, shell, BrowserWindow } = require('electron')
 const { execSync } = require('node:child_process')
 const os = require('node:os')
 const path = require('node:path')
@@ -47,6 +47,12 @@ function MyIpc() {
                     }else{
                         throw new Error(`Jar 执行异常的 日志文件夹 暂未生成，请操作后再查询日志。`);
                     }
+                    break;
+                case 'blog':
+                    // 这里要创建一个子窗口，用于打开 博客网站
+                    let childWin = new BrowserWindow({parent:window, modal:true, fullscreenable:false});
+                    childWin.maximize();
+                    childWin.loadURL('https://www.mickarea.net');
                     break;
                 default:
                     throw new Error(`获取的行为参数 ${behavior} 异常，没有可匹配的处理。`);
