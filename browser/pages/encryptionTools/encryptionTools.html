@@ -18,17 +18,22 @@
     <title>encryptionTools</title>
 </head>
 <body>
-    <!-- 从这里开始编码 -->
-    <div class="container-fluid pt-3">
-        <div class="alert alert-info" role="alert">
-            <h4 class="alert-heading">关于功能</h4>
-            <p id="copyrightInfo"></p>
-            <hr>
-            <p>描述如下：</p>
-            <p>由于，配套的 Jar 包尚未开发“字符加密与数字签名功能”；所以，这里暂不开发功能页面。也许，下一个版本会有这个功能。一切待定。</p>
+    <div id="myContainer" class="container-fluid pt-3">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="digitalSignature-tab" data-bs-toggle="tab" data-bs-target="#digitalSignature-tab-pane" type="button" role="tab" >数字签名</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="encryptOrDecrypt-tab" data-bs-toggle="tab" data-bs-target="#encryptOrDecrypt-tab-pane" type="button" role="tab" >非对称加密/解密</button>
+            </li>
+        </ul>
+        <div class="tab-content py-2" id="myTabContent">
+            <div class="tab-pane fade show active" id="digitalSignature-tab-pane" role="tabpanel" tabindex="0"></div>
+            <div class="tab-pane fade" id="encryptOrDecrypt-tab-pane" role="tabpanel"  tabindex="0"></div>
         </div>
     </div>
 
+    <!-- 引入 bootstrap 的 js 文件 -->
     <script src="../../modules/thirdpartys/bootstrap-5.3.6/bootstrap.bundle.js"></script>
     <!-- 本页面自己的 js 处理 -->
     <script src="encryptionTools.js" type="module"></script>
