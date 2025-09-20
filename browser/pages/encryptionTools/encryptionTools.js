@@ -15,7 +15,7 @@
 "use strict"; // 这是严格模式下的 Javascript 代码
 
 import { documentReady, loadingInit, myapi } from "../../modules/myselfs/js/apis.js";
-import { Bs5EffContainer, Bs5EffForm, Bs5EffButton, Bs5EffCol, Bs5EffFormTextArea, Bs5EffFormTextRadio, Bs5EffRow, Bs5EffMessage, Bs5EffFormTextInput } from "../../modules/myselfs/js/bootstrap5Effect.js";
+import { Bs5EffContainer, Bs5EffForm, Bs5EffButton, Bs5EffCol, Bs5EffFormTextArea, Bs5EffFormTextRadio, Bs5EffRow, Bs5EffMessage, Bs5EffFormTextInput, Bs5EffButtonGroup, Bs5EffDropdownButton } from "../../modules/myselfs/js/bootstrap5Effect.js";
 import { BTN_COR } from "../../modules/myselfs/js/bootstrap5UI.js";
 import { pdcCmdRunning, pdcCmdDone } from "../../modules/myselfs/js/myEvents.js";
 import { DataUtil as du } from "../../utils/datatype.js";
@@ -119,16 +119,24 @@ algorithm2.cmdParam = '-algo'; // 配置命令参数名称
 
 let keyLength2 = new Bs5EffFormTextInput('keyLength2', 
     {
-        labelInfo:'密钥长度 (数字)', helperInfo:'这是加密算法用于生成密钥对，所需要的密钥长度，一般大于 1024 小于 4096', invalidInfo:'密钥长度需要大于 1024 小于 4096'
+        labelInfo:'密钥长度 (数字)', helperInfo:'加密算法生成密钥对时，所需要的密钥长度，一般大于 1024 小于 4096', invalidInfo:'密钥长度需要大于 1024 小于 4096'
     },
     {
         validRule:elem=>{
-            let val = keyLength2.getValue().trim();
-            if(/^[1-9]\d*$/.test(val)) {
-                let tmp = parseInt(val);
-                return (Number.isNaN(tmp) || tmp<1024 || tmp>4096) ? false: true;
+            // 只有公钥没有提供时，才校验 密钥长度信息
+            let action = actionType2.getValue()[0];
+            let pubkey = publicKey2.getValue().trim();
+            // 如果是加密模式 ，且 公钥没有提供，则校验 密钥长度
+            if(action==='encrypt' && pubkey.length<=0){
+                let val = keyLength2.getValue().trim();
+                if(/^[1-9]\d*$/.test(val)) {
+                    let tmp = parseInt(val);
+                    return (Number.isNaN(tmp) || tmp<1024 || tmp>4096) ? false: true;
+                }else{
+                    return false;
+                }
             }else{
-                return false;
+                return true;
             }
         }
     }
@@ -157,7 +165,17 @@ let publicKey2 = new Bs5EffFormTextArea('publicKey2',
         labelInfo:'公钥信息字符串', helperInfo:'公钥信息用于信息加密操作，如果不提供，会自动根据密钥长度重新生成', invalidInfo:'公钥信息字符串不能为空，请认真填写'
     },
     {
-        rows:3,
+        rows:3, validRule:elem=>{
+            // 公钥信息，只有 加密操作 才校验
+            let action = actionType2.getValue()[0];
+            let keyLength = keyLength2.getValue().trim();
+            // 如果是加密模式，且没有提供 密钥长度，则校验 公钥 是否填写
+            if(action === 'encrypt' && keyLength.length<=0){
+                return publicKey2.getValue().trim().length>0;
+            }else{
+                return true;
+            }
+        }
     }
 );
 publicKey2.cmdParam = '-pubkey'; // 配置命令参数名称
@@ -167,7 +185,16 @@ let privateKey2 = new Bs5EffFormTextArea('privateKey2',
         labelInfo:'私钥信息字符串', helperInfo:'私钥信息用于信息解密操作，必须提供', invalidInfo:'私钥信息字符串不能为空，请认真填写'
     },
     {
-        rows:3,
+        rows:3, validRule:elem=>{
+            // 私钥信息，只有 解密操作 才校验
+            let action = actionType2.getValue()[0];
+            // 如果是解密模式，则需要校验 私钥信息是否提供
+            if(action === 'decrypt'){
+                return privateKey2.getValue().trim().length>0;
+            }else{
+                return true;
+            }
+        }
     }
 );
 privateKey2.cmdParam = '-prikey'; // 配置命令参数名称
@@ -204,6 +231,17 @@ let outputContent2 = new Bs5EffFormTextArea('outputContent2',
         rows:3
     }
 );
+
+let configName2 = new Bs5EffFormTextInput('configName2', 
+    {
+        labelInfo:'配置名称（可选）', helperInfo:'这里的名称用于信息保存，并非必须填写。只能写字母或者数字', invalidInfo:'当需要保存配置时，配置名称是必须填写的'
+    },
+    {
+        validRule:/^[0-9a-zA-Z]+$/
+    }
+);
+
+let btnLoadKeyPairs = new Bs5EffDropdownButton('btnLoadKeyPairs', {name:'加载密钥对', color:BTN_COR.info, cssClass:'me-1', click:keyPairConfigLoad});
 
 // ============ 开始构建
 /**
@@ -258,6 +296,9 @@ function buildForm(){
     algorithm2.setValue('RSA');
     actionType2.setValue('encrypt');
     inputContentType2.setValue('text');
+
+    // 刷新配置
+    keyPairConfigListRefresh();
 }
 
 /**
@@ -333,15 +374,24 @@ function buildForm_2(){
         ]
     });
 
+    let row4 = new Bs5EffRow(undefined, {
+        initChildren:[
+            new Bs5EffCol(undefined, {cssClass:'col-6 mb-2',initChildren:[configName2]}),
+        ]
+    });
+
     let btnDoEnOrDe2 = new Bs5EffButton('btnDoEnOrDe2', {name:'加密/解密', cssClass:'me-1', click:doEnorDe});
     let btnRefresh2 = new Bs5EffButton('btnRefresh2', {name:'刷新页面', color:BTN_COR.warning, cssClass:'me-1', click:refreshPage});
-    let row4 = new Bs5EffRow(undefined, {
+    let btnSaveKeyPairs = new Bs5EffButton('btnSaveKeyPairs', {name:'保存密钥对', color:BTN_COR.success, cssClass:'me-1', click:keyPairConfigSave});
+    
+    let btnRemoveAll = new Bs5EffButton('btnRemoveAll', {name:'删除所有密钥对', color:BTN_COR.dark, cssClass:'me-1', click:keyPairConfigRemoveAll});
+    let row5 = new Bs5EffRow(undefined, {
         initChildren:[ new Bs5EffCol(undefined, {
-            initChildren:[btnDoEnOrDe2, btnRefresh2]
+            initChildren:[btnDoEnOrDe2, btnRefresh2, btnSaveKeyPairs, btnLoadKeyPairs, btnRemoveAll]
         }) ]
     });
 
-    form2.addChildren(row1, row2, row3, row4);
+    form2.addChildren(row1, row2, row3, row4, row5);
 
     // 组装
     container2.addChildren(form2);
@@ -429,6 +479,202 @@ function doContentCompare(){
 /**
  * 执行 加密 或者 解密
  */
-function doEnorDe(){
+async function doEnorDe(){
 
+    // 这里是给浏览器处理的
+    if(!myapi.isInApp){
+        console.log(new Date(), '浏览器模拟...给予 jvm 和 jar 一些值');
+        jvm = 'test_jvm';
+        jar = 'test_jar';
+    }
+
+    // 配置填写校验
+    if(jvm.length<=0 || jar.length<=0) { new Bs5EffMessage('Java 或者 Jar 环境配置异常，请检查"基础配置"功能菜单').show(); return ; }
+
+    // 执行参数
+    let cmdArgs = ['-m','ASYMMETRIC_ENCRYPTION'];
+    // 需要提取的组件数组
+    let comptArr = [ algorithm2, actionType2, inputContentType2, inputContent2 ];
+    // 这还需要根据 操作类型 添加具体的 组件
+    if(actionType2.getValue()[0]==='encrypt'){
+        // 加密（密钥长度，公钥）
+        comptArr.push(publicKey2, keyLength2);
+    }else{
+        // 解密（私钥）
+        comptArr.push(privateKey2);
+    }
+
+    // 在执行前，先校验一下
+    let validResult = comptArr.map(compt=>compt.valid()).filter(value=>value===false).length;
+    if(validResult>0){
+        new Bs5EffMessage(`内容校验不通过，还有 ${validResult} 个内容尚未填写正确`).show(); 
+        return ;
+    }
+
+    // 如果，加密时，不提供公钥信息，则需要在执行前，确认一次
+    if(actionType2.getValue()[0]==='encrypt' && publicKey2.getValue().trim().length<=0){
+        let choose = await myapi.showConfirm('当前没有提供 公钥 信息，这样执行时，会重新生成一个密钥对（公钥、私钥），确定执行？');
+        if(choose===false){
+            return ;
+        }
+    }
+
+    // 正式执行
+    comptArr.forEach(compt=>{
+        let paramName = compt.cmdParam;
+        let value = du.isTargetObject(compt, Bs5EffFormTextRadio) ? compt.getValue()[0] : compt.getValue().trim();
+        // 加入参数列表
+        if(value.length>0) cmdArgs.push(paramName, value);
+    });
+
+    // 调用开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.execJar(jvm, jar, cmdArgs); // {status:'ok', info:'', data:undefined};
+    // 调用结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    // 执行结果的处理
+    if(result.status === 'ok' && du.NotNullValue(result.data)){
+        let pubKey = result.data.publicKey;
+        let priKey = result.data.privateKey;
+        let resultString = result.data.resultString;
+        // 
+        outputContent2.setValue(resultString);
+        if(publicKey2.getValue().trim().length<=0 && pubKey.length>0) publicKey2.setValue(pubKey);
+        if(privateKey2.getValue().trim().length<=0 && priKey.length>0) privateKey2.setValue(priKey); 
+    }
+
+    // 消息提示
+    new Bs5EffMessage(result.info, {title:`执行${result.status==='ok'?'成功':'失败'}`}).show(); 
+}
+
+/**
+ * 保存配置信息
+ */
+async function keyPairConfigSave(event){
+    
+    // 首先收集要保存的组件
+    let configNameVal = configName2.getValue().trim();
+    // 收集要处理的组件，然后保存成一个 对象。要注意的是 对象的内部顺序 不一定 跟写的顺序一致
+    let comptObjects = {publicKey2, privateKey2};
+    
+    // 开始判断
+    if(configNameVal.length<=0 || !configName2.valid()) {
+        new Bs5EffMessage('配置文件的名称尚未填写正确, 请检查').show(); 
+        return ; 
+    }
+    let invalidNum = Object.keys(comptObjects).map(name=>comptObjects[name].getValue().trim()).filter(val=>val.length<=0).length;
+    if( invalidNum>0) { new Bs5EffMessage('保存配置失败，需要同时具有公钥、私钥信息，请检查！').show(); return ; }
+
+    // 构造一个 文件名
+    let filename = `keypairconfig-${configNameVal}.properties`;
+    // 构造一个配置信息对象，传到后台，写入文件
+    let config = {filename};
+    // 遍历 comptObjects ，把键值对写入 config 然后 保存
+    Object.keys(comptObjects).forEach(name=>{
+        let cmpt = comptObjects[name];
+        let key = name;
+        // 对于 单选框，返回的是 一个 数组，取第一个就行了。一般文字组件，返回字符串
+        let value = du.isTargetObject(cmpt, Bs5EffFormTextRadio) ? cmpt.getValue()[0] : cmpt.getValue().trim();
+        // 填充
+        config[key] = value;
+    });
+
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    
+    let result = await myapi.saveConfig(config); //  保存
+    if(result.status==='ok'){
+        // 
+        new Bs5EffMessage(`配置保存成功，保存路径为：${result.configFileName}`).show();
+
+        // 如果保存成功，还需要刷新 配置下拉列表
+        await keyPairConfigListRefresh();
+    }else{
+        new Bs5EffMessage(`配置保存失败，后台异常信息为：${result.info}`).show();
+    }
+
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    
+}
+
+/**
+ * 加载配置信息
+ */
+async function keyPairConfigLoad(event){
+
+    // 配置文件名
+    let filename = `keypairconfig-${event.target.getAttribute('option')}`;
+    
+    // 开始 == 加载动画
+    document.dispatchEvent(pdcCmdRunning);
+    let result = await myapi.readConfig(filename); //{status:'ok', info:'', data:{}};
+    // 结束 == 加载动画
+    document.dispatchEvent(pdcCmdDone);
+
+    if(result.status!=='ok'){
+        new Bs5EffMessage(`配置加载失败，后台异常信息为：${result.info}`).show(); return ;
+    }
+
+    // 设置对应的值
+    if(result.data.filename!==undefined) {
+        let newName = result.data.filename;
+        newName = newName.substring(newName.indexOf('-')+1, newName.lastIndexOf('.'));
+        configName2.setValue(newName);
+    }
+    if(result.data.publicKey2!==undefined) publicKey2.setValue(result.data.publicKey2);
+    if(result.data.privateKey2!==undefined) privateKey2.setValue(result.data.privateKey2);
+
+    new Bs5EffMessage(`加载配置 ${filename} 完成`).show();
+}
+
+/**
+ * 刷新配置信息列表
+ */
+async function keyPairConfigListRefresh(){
+    // 获取配置信息
+    let result = await myapi.getAllConfigId('keypairconfig');
+
+    //
+    if(result.status !== 'ok') { new Bs5EffMessage(`加载配置文件列表失败，后台异常信息为：${result.info}`).show(); return ; }
+    if(result.status === 'ok' && (result.data===undefined || result.data.length<=0)){ 
+        new Bs5EffMessage(`当前功能没有加载到任何已保存的配置文件信息`).show(); return ;
+    }else{
+        // 开始刷新
+        let data = result.data.map(filename=>filename.substr(filename.indexOf('-')+1));
+        // 转 map
+        let tmpMap = new Map();
+        data.forEach(value=>{
+            tmpMap.set(value, value);
+        });
+        btnLoadKeyPairs.refresh(tmpMap, true);
+        new Bs5EffMessage(`当前已加载到 ${data.length} 个可用配置文件`).show();
+    }
+}
+
+/**
+ * 删除所有的原有配置文件
+ */
+async function keyPairConfigRemoveAll(){
+
+    // 先确认一次
+    let choose = await myapi.showConfirm('确定要清空所有配置信息吗？这样将会删除本功能的所有 properties 配置文件。');
+    
+    if(choose){
+        // 开始 == 加载动画
+        document.dispatchEvent(pdcCmdRunning);
+        // 开始执行
+        let result = await myapi.removeAllConfig('keypairconfig'); // {status:'ok', info:''}
+        // 结束 == 加载动画
+        document.dispatchEvent(pdcCmdDone);
+
+        if(result.status!=='ok'){
+            new Bs5EffMessage(`删除配置文件失败, 信息如下：${result.info}`).show(); return ;
+        }else{
+            // 刷新页面
+            window.location.reload();
+        }
+    }
 }
