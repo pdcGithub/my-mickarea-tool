@@ -150,10 +150,10 @@ function MyIpc() {
             if(jarResult.status === 'success'){
                 //对于 请求成功的处理，可能返回消息，也可能返回数据字符串
                 result.status='ok';
-                if(jarResult.oriMessage.indexOf('[')==0){
-                    //如果有库表信息返回，则转换为 data
+                if(jarResult.oriMessage.indexOf('[')===0 || jarResult.oriMessage.indexOf('{')===0){
+                    // 如果后台有数据返回，一般都是以 Array 或者 Map 的字符串形式返回
                     result.data = JSON.parse(jarResult.oriMessage);
-                    result.info = "获取数据库数据成功";
+                    result.info = "后台数据获取成功";
                 }else{
                     //普通消息
                     result.info = jarResult.oriMessage;
